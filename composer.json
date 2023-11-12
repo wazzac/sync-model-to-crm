@@ -28,6 +28,13 @@
             "Wazza\\SyncModelToHubspot\\Tests\\": "tests/"
         }
     },
+    "exstra": {
+        "laravel": {
+            "providers": [
+                "Wazza\\SyncModelToHubspot\\Providers\\SyncModelToHubspotServiceProvider"
+            ]
+        }
+    },
     "authors": [{
         "name": "Warren Coetzee",
         "email": "warren.coetzee@gmail.com",
