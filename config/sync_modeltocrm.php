@@ -8,34 +8,37 @@ return [
     // ------------------------------------------------------------
     'logging' => [
         'level' => env('SYNC_MODEL_TO_CRM_LOG_LEVEL', 3),
-        'indicator' => env('SYNC_MODEL_TO_CRM_LOG_INDICATOR', 'sync-modeltohubspot'),
+        'indicator' => env('SYNC_MODEL_TO_CRM_LOG_INDICATOR', 'sync-modeltocrm'),
     ],
 
-    // HubSpot API configuration
+    // CRM API configuration
     // ------------------------------------------------------------
     'api' => [
-        'provider' => env('SYNC_MODEL_TO_CRM_PROVIDER', 'hubspot'),
+        'provider' => env('SYNC_MODEL_TO_CRM_PROVIDER', 'hubspot'), // the provider to use
+        'environment' => env('SYNC_MODEL_TO_CRM_ENVIRONMENT', 'production'), // the environment to use
         'hubspot' => [
             'controller' => "Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController",
-            'endpoint' => "https://www.googleapis.com/language/translate/v2",
-            'action' => "POST",
-            'key' => env('DOM_TRANSLATE_GOOGLE_KEY', null), // https://console.cloud.google.com/apis/credentials
+            'environment' => [
+                'production' => [
+                    'baseuri'       => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_URI', 'https://api.hubapi.com/crm/v4/'),
+                    'access_token'  => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_TOKEN', 'xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'),
+                ],
+                'sandbox' => [
+                    'baseuri'       => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_URI', 'https://api.hubapi.com/crm/v4/'),
+                    'access_token'  => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_TOKEN', 'xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'),
+                ],
+            ],
         ],
-        // ... add more providers here
+        // ... add more providers here, i.e.
+        'pipedrive' => null,
+        'salesforce' => null,
+        'zohocrm' => null,
     ],
 
-    // Below details will be used to hash a given phrase for quick loading (via index)
+    // Hash salt and algo settings
     // ------------------------------------------------------------
     'hash' => [
-        'salt' => env('DOM_TRANSLATE_HASH_SALT', 'DzBQ2DxKhNaF'),
-        'algo' => env('DOM_TRANSLATE_HASH_ALGO', 'sha256'),
+        'salt' => env('SYNC_MODEL_TO_CRM_HASH_SALT', 'Ey4cw2BHvi0HmGYjyqYr'),
+        'algo' => env('SYNC_MODEL_TO_CRM_HASH_ALGO', 'sha256'),
     ],
-
-    // Only ISO-639-1 formats:
-    // @link: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
-    // ------------------------------------------------------------
-    'language' => [
-        'src' => env('DOM_TRANSLATE_LANG_SRC', 'en'), // default source language
-        'dest' => env('DOM_TRANSLATE_LANG_DEST', 'af'), // default destination language
-    ]
 ];
