@@ -1,5 +1,5 @@
 {
-    "name": "wazza/sync-model-to-hubspot",
+    "name": "wazza/sync-model-to-crm",
     "description": "Helper package to setup an easy and out of the box Laravel Model (i.e. User, Entity, etc.) to HubSpot object (i.e. Contact, Company, etc.) sync process.",
     "type": "library",
     "require": {
@@ -19,19 +19,19 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Wazza\\SyncModelToHubspot\\": "src/"
+            "Wazza\\SyncModelToCrm\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Wazza\\SyncModelToHubspot\\": "src/",
-            "Wazza\\SyncModelToHubspot\\Tests\\": "tests/"
+            "Wazza\\SyncModelToCrm\\": "src/",
+            "Wazza\\SyncModelToCrm\\Tests\\": "tests/"
         }
     },
     "exstra": {
         "laravel": {
             "providers": [
-                "Wazza\\SyncModelToHubspot\\Providers\\SyncModelToHubspotServiceProvider"
+                "Wazza\\SyncModelToCrm\\Providers\\SyncModelToCrmServiceProvider"
             ]
         }
     },
