@@ -18,18 +18,16 @@ return [
         'environment' => env('SYNC_MODEL_TO_CRM_ENVIRONMENT', 'production'), // the environment to use
         'hubspot' => [
             'controller' => "Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController",
-            'environment' => [
-                'production' => [
-                    'baseuri'       => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_URI', 'https://api.hubapi.com/crm/v4/'),
-                    'access_token'  => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_TOKEN', 'xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'),
-                ],
-                'sandbox' => [
-                    'baseuri'       => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_URI', 'https://api.hubapi.com/crm/v4/'),
-                    'access_token'  => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_TOKEN', 'xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'),
-                ],
+            'production' => [
+                'baseuri'       => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_URI', 'https://api.hubapi.com/crm/v4/'),
+                'access_token'  => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_TOKEN', 'xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'),
+            ],
+            'sandbox' => [
+                'baseuri'       => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_URI', 'https://api.hubapi.com/crm/v4/'),
+                'access_token'  => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_TOKEN', 'xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'),
             ],
         ],
-        // ... add more providers here, i.e.
+        // more providers to follow...
         'pipedrive' => null,
         'salesforce' => null,
         'zohocrm' => null,
