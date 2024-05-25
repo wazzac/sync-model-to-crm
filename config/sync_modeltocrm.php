@@ -14,23 +14,25 @@ return [
     // CRM API configuration
     // ------------------------------------------------------------
     'api' => [
-        'provider' => env('SYNC_MODEL_TO_CRM_PROVIDER', 'hubspot'), // the provider to use
-        'environment' => env('SYNC_MODEL_TO_CRM_ENVIRONMENT', 'production'), // the environment to use
-        'hubspot' => [
-            'controller' => "Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController",
-            'production' => [
-                'baseuri'       => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_URI', 'https://api.hubapi.com/crm/v4/'),
-                'access_token'  => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_TOKEN', 'xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'),
+        'provider' => env('SYNC_MODEL_TO_CRM_PROVIDER', 'hubspot'), // the default provider to use if not defined in the model
+        'environment' => env('SYNC_MODEL_TO_CRM_ENVIRONMENT', 'production'), // the default environment to use if not defined in the model
+        'providers' => [
+            'hubspot' => [
+                'controller' => "Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController",
+                'production' => [
+                    'baseuri'       => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_PRODUCTION_URI', 'https://api.hubapi.com/crm/v4/'),
+                    'access_token'  => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_PRODUCTION_TOKEN', 'xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'),
+                ],
+                'sandbox' => [
+                    'baseuri'       => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_SANDBOX_URI', 'https://api.hubapi.com/crm/v4/'),
+                    'access_token'  => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_SANDBOX_TOKEN', 'xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'),
+                ],
             ],
-            'sandbox' => [
-                'baseuri'       => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_URI', 'https://api.hubapi.com/crm/v4/'),
-                'access_token'  => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_TOKEN', 'xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'),
-            ],
-        ],
-        // more providers to follow...
-        'pipedrive' => null,
-        'salesforce' => null,
-        'zohocrm' => null,
+            // more providers to follow...
+            'pipedrive' => null,
+            'salesforce' => null,
+            'zohocrm' => null,
+        ]
     ],
 
     // Hash salt and algo settings
