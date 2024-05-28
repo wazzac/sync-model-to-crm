@@ -119,7 +119,7 @@ class CrmController extends BaseController
     public function setEnvironment(array|string|null $environment = null)
     {
         $this->environment = $environment ?? config('sync_modeltocrm.api.environment');
-        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, 'Crm Environment: `' . $this->environment . '`', $this->logIdentifier);
+        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, 'Crm Environment: `' . (is_array($this->environment) ? json_encode($this->environment) : $this->environment) . '`', $this->logIdentifier);
         return $this;
     }
 
