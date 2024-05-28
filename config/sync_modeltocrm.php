@@ -19,6 +19,14 @@ return [
         'providers' => [
             'hubspot' => [
                 'controller' => "Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController",
+                'object_table_mapping' => [
+                    'contact'   => 'user',
+                    'company'   => 'entity',
+                    'deal'      => 'order',
+                    'product'   => 'product',
+                    'line_item' => 'order_item',
+                    //... more to follow
+                ],
                 'production' => [
                     'baseuri'       => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_PRODUCTION_URI', 'https://api.hubapi.com/crm/v4/'),
                     'access_token'  => env('SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_PRODUCTION_TOKEN', 'xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'),
