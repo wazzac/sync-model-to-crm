@@ -39,9 +39,9 @@ class SyncModelToCrmServiceProvider extends BaseServiceProvider
         );
 
         // Register the service the package provides.
-        //$this->app->singleton(CrmController::class, function () {
-        //    return new CrmController();
-        //});
+        // $this->app->singleton(CrmController::class, function () {
+        //     return new CrmController();
+        // });
     }
 
     /**
