@@ -84,23 +84,13 @@ class CrmController extends BaseController
     /**
      * Create a new CrmController instance.
      *
-     * @param array|string|null $environment
-     * @param array $propertyMapping
      * @param string|null $logIdentifier
      * @return void
      * @throws BindingResolutionException
      * @throws NotFoundExceptionInterface
      * @throws ContainerExceptionInterface
      */
-    public function __construct(
-        array|string|null $environment = null,
-        array $propertyMapping = [],
-        array $uniqueFilters = [],
-        string $logIdentifier = null
-    ) {
-        $this->setEnvironment($environment);
-        $this->setPropertyMapping($propertyMapping);
-        $this->setUniqueFilters($uniqueFilters);
+    public function __construct(string $logIdentifier = null) {
         $this->setLogIdentifier($logIdentifier);
     }
 
@@ -177,8 +167,16 @@ class CrmController extends BaseController
      */
     public function setModel($model)
     {
+        // -- set the model
         $this->model = $model;
         LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, 'Crm Model set. Class: `' . get_class($this->model) . '`, Table: `' . $this->model->getTable() . '`.', $this->logIdentifier);
+
+        // -- set the default environment, property mapping and unique filters defined in the Model
+        $this->setEnvironment($model->smtcEnvironment ?? null);
+        $this->setPropertyMapping($model->smtcPropertyMapping ?? []);
+        $this->setUniqueFilters($model->smtcUniqueFilters ?? []);
+
+        // done
         return $this;
     }
 
