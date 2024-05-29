@@ -15,16 +15,16 @@ The idea around this library is to make it very easy for a developer to define i
 After each first time successful sync, the CRM Object primary key will be stored in a mapping table against the local table primary key. This allows for quicker loading times for future changes.
 
 Update your Model with 4 properties that define the rules for 3rd-party CRM synchronization:
-- @var string|array|null `$smtcEnvironment`;
-- @var array `$smtcPropertyMapping`;
-- @var array `$smtcUniqueFilters`;
-- @var string `$smtcObject`;
+- @var string|array|null `$syncModelCrmEnvironment`;
+- @var array `$syncModelCrmPropertyMapping`;
+- @var array `$syncModelCrmUniqueSearch`;
+- @var string `$syncModelCrmRelatedObject`;
 
 Looking at the below example:
-1. the `User` Model will syncronize to both the `Sandbox` and `Production` **HubSpot** environments _($smtcEnvironment)_.
-2. It will only syncronize the `name` and `email` properties to the HubSpot corresponding `firstname` and `email` fields _($smtcPropertyMapping)_.
-3. When there is no internal mapping yet stored, the CRM record will be uniquely loaded using the `email` property _($smtcUniqueFilters)_.
-4. In order for the script to know which remote CRM object relates to the User model, `contact` _($smtcObject)_ have to be defined as the remote item.
+1. the `User` Model will syncronize to both the `Sandbox` and `Production` **HubSpot** environments _($syncModelCrmEnvironment)_.
+2. It will only syncronize the `name` and `email` properties to the HubSpot corresponding `firstname` and `email` fields _($syncModelCrmPropertyMapping)_.
+3. When there is no internal mapping yet stored, the CRM record will be uniquely loaded using the `email` property _($syncModelCrmUniqueSearch)_.
+4. In order for the script to know which remote CRM object relates to the User model, `contact` _($syncModelCrmRelatedObject)_ have to be defined as the remote item.
 
 ```PHP
 class User extends Authenticatable
@@ -44,14 +44,14 @@ class User extends Authenticatable
      *
      * @var string|array|null
      */
-    public $smtcEnvironment = ['sandbox', 'production'];
+    public $syncModelCrmEnvironment = ['sandbox', 'production'];
 
     /**
      * Mapping array for local and CRM properties
      *
      * @var array
      */
-    public $smtcPropertyMapping = [
+    public $syncModelCrmPropertyMapping = [
         'hubspot' => [
             'name' => 'firstname',
             'email' => 'email',
@@ -63,7 +63,7 @@ class User extends Authenticatable
      *
      * @var array
      */
-    public $smtcUniqueFilters = [
+    public $syncModelCrmUniqueSearch = [
         'hubspot' => [
             'email' => 'email',
         ],
@@ -75,7 +75,7 @@ class User extends Authenticatable
      *
      * @var string
      */
-    public $smtcObject = 'contact';
+    public $syncModelCrmRelatedObject = 'contact';
 }
 ```
 

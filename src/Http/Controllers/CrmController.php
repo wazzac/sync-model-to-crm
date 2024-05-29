@@ -13,7 +13,8 @@ use Psr\Container\ContainerExceptionInterface;
 use Exception;
 
 /**
- * Class CrmController
+ * Sync Class CrmController
+ * Example: (new CrmController())->setModel($user)->execute();
  *
  * @package Wazza\SyncModelToCrm\Http\Controllers
  * @version 1.0.0
@@ -107,6 +108,7 @@ class CrmController extends BaseController
     public function setLogIdentifier(?string $logIdentifier = null)
     {
         $this->logIdentifier = $logIdentifier ?? hash('crc32', microtime(true) . rand(10000, 99999));
+        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, 'Crm Log Identifier: `' . $this->logIdentifier . '`', $this->logIdentifier);
         return $this;
     }
 
@@ -160,7 +162,8 @@ class CrmController extends BaseController
     }
 
     /**
-     * Set the model to sync
+     * Set the model to sync.
+     * This Method will also set the default environment, property mapping and unique filters defined in the Model
      *
      * @param \Illuminate\Database\Eloquent\Model $model
      * @return CrmController
@@ -172,9 +175,9 @@ class CrmController extends BaseController
         LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, 'Crm Model set. Class: `' . get_class($this->model) . '`, Table: `' . $this->model->getTable() . '`.', $this->logIdentifier);
 
         // -- set the default environment, property mapping and unique filters defined in the Model
-        $this->setEnvironment($model->smtcEnvironment ?? null);
-        $this->setPropertyMapping($model->smtcPropertyMapping ?? []);
-        $this->setUniqueFilters($model->smtcUniqueFilters ?? []);
+        $this->setEnvironment($model->syncModelCrmEnvironment ?? null);
+        $this->setPropertyMapping($model->syncModelCrmPropertyMapping ?? []);
+        $this->setUniqueFilters($model->syncModelCrmUniqueSearch ?? []);
 
         // done
         return $this;
