@@ -30,6 +30,31 @@ class HubSpotController implements CrmControllerInterface
 {
     private const PROVIDER = 'hubspot';
 
+    // Life Cycle Stages (Property Name `lifecyclestage`; for both contacts and companies)
+    // -------------------------
+    public const LIFECYCLE_STAGE_PROPERTY_NAME  = 'lifecyclestage';
+    // Stages:
+    public const LIFECYCLE_STAGE__SUBSCRIBER    = 'subscriber';
+    public const LIFECYCLE_STAGE__LEAD          = 'lead';
+    public const LIFECYCLE_STAGE__MQL           = 'marketingqualifiedlead';
+    public const LIFECYCLE_STAGE__SQL           = 'salesqualifiedlead';
+    public const LIFECYCLE_STAGE__OPPORTUNITY   = 'opportunity';
+    public const LIFECYCLE_STAGE__CUSTOMER      = 'customer';
+    public const LIFECYCLE_STAGE__EVANGELIST    = 'evangelist';
+    public const LIFECYCLE_STAGE__OTHER         = 'other';
+
+    // Contact Property - Lead Status (key: hs_lead_status)
+    // -------------------------
+    public const CRM_CONTACT_LEAD_STATUS__NEW                   = 'NEW';
+    public const CRM_CONTACT_LEAD_STATUS__OPEN                  = 'OPEN';
+    public const CRM_CONTACT_LEAD_STATUS__IN_PROGRESS           = 'IN_PROGRESS';
+    public const CRM_CONTACT_LEAD_STATUS__OPEN_DEAL             = 'OPEN_DEAL';
+    public const CRM_CONTACT_LEAD_STATUS__UNQUALIFIED           = 'UNQUALIFIED';
+    public const CRM_CONTACT_LEAD_STATUS__ATTEMPTED_TO_CONTACT  = 'ATTEMPTED_TO_CONTACT';
+    public const CRM_CONTACT_LEAD_STATUS__CONNECTED             = 'CONNECTED';
+    public const CRM_CONTACT_LEAD_STATUS__BAD_TIMING            = 'BAD_TIMING';
+    public const CRM_CONTACT_LEAD_STATUS__DELETED               = 'DELETED';
+
     /**
      * The HubSpot API client
      *

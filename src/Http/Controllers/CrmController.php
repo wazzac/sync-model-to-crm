@@ -69,6 +69,32 @@ class CrmController extends BaseController
     public $uniqueFilters = [];
 
     /**
+     * The Crm Delete rules to follow.
+     * i.e. if Soft-delete is applicable, what should the CRM record be updated to?
+     * if Hard-delete is used, the record will be deleted/archived in the CRM.
+     *
+     * $deleteRule = [
+     *   'hard_delete' => [
+     *       'hubspot' => false,
+     *   ],
+     *   'soft_delete' => [
+     *       'hubspot' => [
+     *           'lifecyclestage' => 'other',
+     *           'hs_lead_status' => 'DELETED',
+     *       ],
+     *   ]
+     *];
+     *
+     * @var array
+     */
+    public $deleteRule = [];
+
+
+    private $actionInsert = true;
+    private $actionUpdate = true;
+    private $actionDelete = false;
+
+    /**
      * The log identifier to match event sessions
      *
      * @var string
@@ -162,6 +188,20 @@ class CrmController extends BaseController
     }
 
     /**
+     * Set the delete rules for the CRM provider
+     *
+     * @param array $deleteRule
+     */
+    public function setDeleteRule(array $deleteRule = [])
+    {
+        // only allow 2 keys in the delete rule array, these are `hard_delete` and `soft_delete`. Strip out the allowed keys.
+        $deleteRule = array_intersect_key($deleteRule, array_flip(['hard_delete', 'soft_delete']));
+        $this->deleteRule = $deleteRule;
+        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, 'Crm Delete Rule: `' . json_encode($this->deleteRule) . '`', $this->logIdentifier);
+        return $this;
+    }
+
+    /**
      * Set the model to sync.
      * This Method will also set the default environment, property mapping and unique filters defined in the Model
      *
@@ -178,6 +218,7 @@ class CrmController extends BaseController
         $this->setEnvironment($model->syncModelCrmEnvironment ?? null);
         $this->setPropertyMapping($model->syncModelCrmPropertyMapping ?? []);
         $this->setUniqueFilters($model->syncModelCrmUniqueSearch ?? []);
+        $this->setDeleteRule($model->syncModelCrmDeleteRules ?? []);
 
         // done
         return $this;
@@ -228,6 +269,16 @@ class CrmController extends BaseController
     }
 
     /**
+     * Get the delete rules for the CRM provider
+     *
+     * @return array
+     */
+    public function getDeleteRule()
+    {
+        return $this->deleteRule;
+    }
+
+    /**
      * Get the model to sync
      *
      * @return \Illuminate\Database\Eloquent\Model $model
@@ -245,11 +296,12 @@ class CrmController extends BaseController
      * Execute the CRM sync process
      *
      * @param \Illuminate\Database\Eloquent\Model $model The model to sync
+     * @param bool $processDelete This defines if the CRM record should be deleted/archived if the local record is deleted/archived
      * @param string|array|null $processEnvironment This defines the environment to sync to (e.g. production, sandbox, etc.)
      * @param string|array|null $processProvider This defines the CRM provider to sync to (e.g. hubspot, salesforce, etc.)
      * @return void
      */
-    public function execute($processEnvironment = null, $processProvider = null)
+    public function execute($processDelete = false, $processEnvironment = null, $processProvider = null)
     {
         LogController::log(LogController::TYPE__INFO, LogController::LEVEL__MID, 'Execute the CRM Sync process.', $this->logIdentifier);
 
@@ -333,9 +385,18 @@ class CrmController extends BaseController
 
                 // located the user record, lets continue to update it
                 if ($crmObject->getCrmObjectItem() !== null) {
-                    LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] CRM Object found. Updating...', $this->logIdentifier);
-                    $crmObject->update();
+                    if ($processDelete) {
+                        // process delete
+                        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] CRM Object found. Deleting...', $this->logIdentifier);
+                        $crmObject->delete();
+                    }
+                    else {
+                        // process update
+                        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] CRM Object found. Updating...', $this->logIdentifier);
+                        $crmObject->update();
+                    }
                 } else {
+                    // process insert
                     LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] CRM Object not found. Creating...', $this->logIdentifier);
                     $crmObject->create();
                 }

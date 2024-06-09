@@ -22,6 +22,10 @@ final class LogController
     public const LEVEL__MID = 2;
     public const LEVEL__LOW = 3;
 
+    public $logIdentifier;
+
+    public
+
     /**
      * Static Log Controller
      *
@@ -47,19 +51,14 @@ final class LogController
             $type = self::TYPE__INFO;
         }
 
-        // make sure we can log
-        if (
-            isset($logConf['level']) &&
-            !empty($logConf['level']) &&
-            $level <= $logConf['level'] && $level > 0
-        ) {
-            // make sure the method is allowed
-            if (in_array($type, ['alert', 'critical', 'debug', 'emergency', 'error', 'info', 'notice', 'warning'])) {
-                // log...
-                Log::$type('[' . $logConf['indicator'] . ']' . (!is_null($logIdentifier) ? '[' . $logIdentifier . '] ' : ' ') . $string, $context);
-            }
+        // make sure the level is allowed - default to `high`
+        if (!in_array($level, [self::LEVEL__NONE, self::LEVEL__HIGH, self::LEVEL__MID, self::LEVEL__LOW])) {
+            $level = self::LEVEL__HIGH;
         }
 
-        // done...
+        // make sure we can log - take the config level into account
+        if ($level <= $logConf['level'] && $level > 0) {
+            Log::$type('[' . $logConf['indicator'] . ']' . (!is_null($logIdentifier) ? '[' . $logIdentifier . '] ' : ' ') . $string, $context);
+        }
     }
 }
