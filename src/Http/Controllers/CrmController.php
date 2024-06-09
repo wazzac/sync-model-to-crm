@@ -5,7 +5,6 @@ namespace Wazza\SyncModelToCrm\Http\Controllers;
 use Wazza\SyncModelToCrm\Http\Controllers\BaseController;
 use Wazza\SyncModelToCrm\Models\SmtcExternalKeyLookup;
 use Wazza\SyncModelToCrm\Http\Contracts\CrmControllerInterface;
-use Wazza\SyncModelToCrm\Http\Controllers\LogController;
 use Illuminate\Support\Facades\App;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Psr\Container\NotFoundExceptionInterface;
@@ -69,39 +68,6 @@ class CrmController extends BaseController
     public $uniqueFilters = [];
 
     /**
-     * The Crm Delete rules to follow.
-     * i.e. if Soft-delete is applicable, what should the CRM record be updated to?
-     * if Hard-delete is used, the record will be deleted/archived in the CRM.
-     *
-     * $deleteRule = [
-     *   'hard_delete' => [
-     *       'hubspot' => false,
-     *   ],
-     *   'soft_delete' => [
-     *       'hubspot' => [
-     *           'lifecyclestage' => 'other',
-     *           'hs_lead_status' => 'DELETED',
-     *       ],
-     *   ]
-     *];
-     *
-     * @var array
-     */
-    public $deleteRule = [];
-
-
-    private $actionInsert = true;
-    private $actionUpdate = true;
-    private $actionDelete = false;
-
-    /**
-     * The log identifier to match event sessions
-     *
-     * @var string
-     */
-    private $logIdentifier;
-
-    /**
      * The model to sync
      *
      * @var \Illuminate\Database\Eloquent\Model
@@ -118,25 +84,16 @@ class CrmController extends BaseController
      * @throws ContainerExceptionInterface
      */
     public function __construct(string $logIdentifier = null) {
-        $this->setLogIdentifier($logIdentifier);
+        // parent constructor
+        parent::__construct($logIdentifier);
+
+        // anything else to do here?
+        // ...
     }
 
     // --------------------------------------------------------------
     // -- setters
     // --------------------------------------------------------------
-
-    /**
-     * Set the log identifier for the CRM provider
-     *
-     * @param string|null $logIdentifier
-     * @return CrmController
-     */
-    public function setLogIdentifier(?string $logIdentifier = null)
-    {
-        $this->logIdentifier = $logIdentifier ?? hash('crc32', microtime(true) . rand(10000, 99999));
-        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, 'Crm Log Identifier: `' . $this->logIdentifier . '`', $this->logIdentifier);
-        return $this;
-    }
 
     /**
      * Set the environment for the CRM provider
@@ -147,7 +104,7 @@ class CrmController extends BaseController
     public function setEnvironment(array|string|null $environment = null)
     {
         $this->environment = $environment ?? config('sync_modeltocrm.api.environment');
-        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, 'Crm Environment: `' . (is_array($this->environment) ? json_encode($this->environment) : $this->environment) . '`', $this->logIdentifier);
+        $this->logger->infoLow('Crm Environment: `' . (is_array($this->environment) ? json_encode($this->environment) : $this->environment) . '`');
         return $this;
     }
 
@@ -165,7 +122,7 @@ class CrmController extends BaseController
         if (count($this->propertyMapping) === count($this->propertyMapping, COUNT_RECURSIVE)) {
             $this->propertyMapping = [config('sync_modeltocrm.api.provider') => $this->propertyMapping];
         }
-        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, 'Crm Mapping: `' . json_encode($this->propertyMapping) . '`', $this->logIdentifier);
+        $this->logger->infoLow('Crm Mapping: `' . json_encode($this->propertyMapping) . '`');
         return $this;
     }
 
@@ -183,21 +140,7 @@ class CrmController extends BaseController
         if (count($this->uniqueFilters) === count($this->uniqueFilters, COUNT_RECURSIVE)) {
             $this->uniqueFilters = [config('sync_modeltocrm.api.provider') => $this->uniqueFilters];
         }
-        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, 'Crm Unique Filters: `' . json_encode($this->uniqueFilters) . '`', $this->logIdentifier);
-        return $this;
-    }
-
-    /**
-     * Set the delete rules for the CRM provider
-     *
-     * @param array $deleteRule
-     */
-    public function setDeleteRule(array $deleteRule = [])
-    {
-        // only allow 2 keys in the delete rule array, these are `hard_delete` and `soft_delete`. Strip out the allowed keys.
-        $deleteRule = array_intersect_key($deleteRule, array_flip(['hard_delete', 'soft_delete']));
-        $this->deleteRule = $deleteRule;
-        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, 'Crm Delete Rule: `' . json_encode($this->deleteRule) . '`', $this->logIdentifier);
+        $this->logger->infoLow('Crm Unique Filters: `' . json_encode($this->uniqueFilters) . '`');
         return $this;
     }
 
@@ -212,13 +155,12 @@ class CrmController extends BaseController
     {
         // -- set the model
         $this->model = $model;
-        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, 'Crm Model set. Class: `' . get_class($this->model) . '`, Table: `' . $this->model->getTable() . '`.', $this->logIdentifier);
+        $this->logger->infoLow('Crm Model set. Class: `' . get_class($this->model) . '`, Table: `' . $this->model->getTable() . '`.');
 
         // -- set the default environment, property mapping and unique filters defined in the Model
         $this->setEnvironment($model->syncModelCrmEnvironment ?? null);
         $this->setPropertyMapping($model->syncModelCrmPropertyMapping ?? []);
         $this->setUniqueFilters($model->syncModelCrmUniqueSearch ?? []);
-        $this->setDeleteRule($model->syncModelCrmDeleteRules ?? []);
 
         // done
         return $this;
@@ -227,16 +169,6 @@ class CrmController extends BaseController
     // --------------------------------------------------------------
     // -- getters
     // --------------------------------------------------------------
-
-    /**
-     * Get the current log identifier for the CRM provider
-     *
-     * @return string
-     */
-    public function getLogIdentifier()
-    {
-        return $this->logIdentifier;
-    }
 
     /**
      * Get the environment for the CRM provider
@@ -269,16 +201,6 @@ class CrmController extends BaseController
     }
 
     /**
-     * Get the delete rules for the CRM provider
-     *
-     * @return array
-     */
-    public function getDeleteRule()
-    {
-        return $this->deleteRule;
-    }
-
-    /**
      * Get the model to sync
      *
      * @return \Illuminate\Database\Eloquent\Model $model
@@ -303,23 +225,23 @@ class CrmController extends BaseController
      */
     public function execute($processDelete = false, $processEnvironment = null, $processProvider = null)
     {
-        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__MID, 'Execute the CRM Sync process.', $this->logIdentifier);
+        $this->logger->infoMid('Execute the CRM Sync process.');
 
         // make sure we have a model to sync
         if (empty($this->model)) {
-            LogController::log(LogController::TYPE__ERROR, LogController::LEVEL__MID, 'No model provided to sync.', $this->logIdentifier);
+            $this->logger->errorMid('No model provided to sync.');
             throw new Exception('No model provided to sync.');
         }
 
         // check if we have property mappings to process
         if (empty($this->propertyMapping)) {
-            LogController::log(LogController::TYPE__ERROR, LogController::LEVEL__MID, 'No property mappings found to be synced.', $this->logIdentifier);
+            $this->logger->errorMid('No property mappings found to be synced.');
             return;
         }
 
         // make sure the environment is provided
         if (empty($this->environment)) {
-            LogController::log(LogController::TYPE__ERROR, LogController::LEVEL__MID, 'No environment provided to sync to.', $this->logIdentifier);
+            $this->logger->errorMid('No environment provided to sync to.');
             return;
         }
 
@@ -332,29 +254,33 @@ class CrmController extends BaseController
         foreach ($this->environment as $environment) {
             // check if we can process this environment
             if (!$this->processEnvironment($environment, $processEnvironment)) {
-                LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '] Skipping environment...', $this->logIdentifier);
+                $this->logger->infoLow('[' . $environment . '] Skipping environment...');
                 continue;
             }
-            LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '] Commence Crm Sync under the `' . $environment . '` environment.', $this->logIdentifier);
+            $this->logger->infoLow('[' . $environment . '] Commence Crm Sync under the `' . $environment . '` environment.');
 
             // loop the property mappings
             foreach ($this->propertyMapping as $provider => $mapping) {
                 // check if we can process this provider
                 if (!$this->processProvider($provider, $processProvider)) {
-                    LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] Skipping provider...', $this->logIdentifier);
+                    $this->logger->infoLow('[' . $environment . '][' . $provider . '] Skipping provider...');
                     continue;
                 }
 
                 // load the correct CRM provider controller
                 $providerController = config('sync_modeltocrm.api.providers.' . $provider . '.controller');
                 if (empty($providerController)) {
-                    LogController::log(LogController::TYPE__ERROR, LogController::LEVEL__MID, 'No provider controller found for ' . $provider, $this->logIdentifier);
+                    $this->logger->errorMid('No provider controller found for ' . $provider);
                     throw new Exception('No provider controller found for ' . $provider);
                 }
 
                 // bind the Provider Translation Controller with the `Crm Controller Interface`
                 App::bind(CrmControllerInterface::class, $providerController);
-                LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] Provider Controller ' . $providerController . ' binded to the Crm Class.', $this->logIdentifier);
+                $this->logger->infoLow('[' . $environment . '][' . $provider . '] Provider Controller ' . $providerController . ' binded to the Crm Class.');
+
+                // --------------------------------------------------------------
+                // -- initiate the crm sync request on the binded provider class
+                // --------------------------------------------------------------
 
                 /**
                  * initiate the crm sync request on the binded provider class
@@ -363,12 +289,12 @@ class CrmController extends BaseController
                 $crmObject = App::make(CrmControllerInterface::class);
 
                 // connect to the crm provider environment and provide the same log identifier
-                $crmObject->connect($environment, $this->logIdentifier);
-                LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] Connected to Provider environment `' . $environment . '`.', $this->logIdentifier);
+                $crmObject->connect($environment, $this->logger->getLogIdentifier() . '[' . $environment . '][' . $provider . ']');
+                $crmObject->logger->infoLow('Connected to Provider environment `' . $environment . '`.');
 
-                // construct the crm property mapping
+                // construct the crm property mapping, delete rules and unique filters
                 $crmObject->setup($this->model, $mapping);
-                LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] CRM Property Mapping: ' . json_encode($mapping) . '.', $this->logIdentifier);
+                $crmObject->logger->infoLow('CRM Property Mapping: ' . json_encode($mapping) . '.');
 
                 // look in the object mapping table to see if we can find the crm object primary key
                 $keyLookup = SmtcExternalKeyLookup::where('object_id', $this->model->id)
@@ -378,44 +304,49 @@ class CrmController extends BaseController
                     ->first();
 
                 // get the search filters
-                $filters = $this->uniqueFilters[$provider] ?? [];
+                $crmFilters = $this->uniqueFilters[$provider] ?? [];
 
                 // load the crm data (if exists)
-                $crmObject->load($keyLookup->ext_object_id ?? null, $filters);
+                $crmObject->load($keyLookup->ext_object_id ?? null, $crmFilters);
 
                 // located the user record, lets continue to update it
                 if ($crmObject->getCrmObjectItem() !== null) {
                     if ($processDelete) {
                         // process delete
-                        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] CRM Object found. Deleting...', $this->logIdentifier);
+                        $crmObject->logger->infoLow('CRM Object found. Deleting...');
                         $crmObject->delete();
                     }
                     else {
                         // process update
-                        LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] CRM Object found. Updating...', $this->logIdentifier);
+                        $crmObject->logger->infoLow('CRM Object found. Updating...');
                         $crmObject->update();
                     }
                 } else {
                     // process insert
-                    LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] CRM Object not found. Creating...', $this->logIdentifier);
+                    $crmObject->logger->infoLow('CRM Object not found. Creating...');
                     $crmObject->create();
                 }
 
                 // if the $keyLookup result was empty, then create a new record in the object mapping table
                 $crmRecord = $crmObject->getCrmObjectItem();
                 if (empty($keyLookup) && isset($crmRecord['id']) && !empty($crmRecord['id'])) {
+                    // create a new record in the object mapping table
                     $keyLookup = new SmtcExternalKeyLookup();
-                    $keyLookup->object_id = $this->model->id;
-                    $keyLookup->object_type = $this->model->getTable();
-                    $keyLookup->ext_provider = $provider;
+                    $keyLookup->object_id       = $this->model->id;
+                    $keyLookup->object_type     = $this->model->getTable();
+                    $keyLookup->ext_provider    = $provider;
                     $keyLookup->ext_environment = $environment;
-                    $keyLookup->ext_object_id = $crmRecord['id'];
+                    $keyLookup->ext_object_id   = $crmRecord['id'];
                     $keyLookup->save();
-                    LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] CRM Object Key Lookup created. `' . $keyLookup->object_id . '` to `'.$keyLookup->ext_object_id.'`', $this->logIdentifier);
+                    $crmObject->logger->infoLow('CRM Object Key Lookup created. `' . $keyLookup->object_id . '` to `'.$keyLookup->ext_object_id.'`');
                 }
 
                 // done, next provider
-                LogController::log(LogController::TYPE__INFO, LogController::LEVEL__LOW, '[' . $environment . '][' . $provider . '] CRM Sync completed.', $this->logIdentifier);
+                $crmObject->logger->infoLow('CRM Sync completed.');
+
+                // -- cleanup
+                $crmObject->disconnect();
+                unset($crmObject);
             }
         }
     }
@@ -436,7 +367,7 @@ class CrmController extends BaseController
     {
         // make sure we have a current environment
         if (empty($currentEnvironment)) {
-            LogController::log(LogController::TYPE__ERROR, LogController::LEVEL__MID, 'No current environment provided.');
+            $this->logger->errorMid('No current environment provided.');
             throw new Exception('No current environment provided.');
         }
 
@@ -468,7 +399,7 @@ class CrmController extends BaseController
     {
         // make sure we have a current provider
         if (empty($currentProvider)) {
-            LogController::log(LogController::TYPE__ERROR, LogController::LEVEL__MID, 'No current provider provided.');
+            $this->logger->errorMid('No current provider provided.');
             throw new Exception('No current provider provided.');
         }
 
