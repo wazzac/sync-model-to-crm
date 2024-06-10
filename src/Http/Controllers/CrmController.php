@@ -65,7 +65,7 @@ class CrmController extends BaseController
      *
      * @var array
      */
-    public $uniqueFilters = [];
+    private $uniqueFilters = [];
 
     /**
      * The model to sync
@@ -75,7 +75,7 @@ class CrmController extends BaseController
     private $model;
 
     /**
-     * Create a new CrmController instance.
+     * Create a new CrmController instance and define the log identifier (blank will create a new one)
      *
      * @param string|null $logIdentifier
      * @return void

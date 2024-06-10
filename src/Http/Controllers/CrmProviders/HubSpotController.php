@@ -60,7 +60,7 @@ class HubSpotController implements CrmControllerInterface
      *
      * @var LogController
      */
-    private $logger;
+    public $logger;
 
     /**
      * The HubSpot API client

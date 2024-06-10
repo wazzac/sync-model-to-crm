@@ -17,7 +17,7 @@ class BaseController extends Controller
      *
      * @var LogController
      */
-    private $logger;
+    public $logger;
 
     /**
      * Create a new CrmController instance.
