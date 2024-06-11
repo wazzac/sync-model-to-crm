@@ -101,6 +101,19 @@ class HubSpotController implements CrmControllerInterface
     private $deleteRules = [];
 
     /**
+     * The HubSpot object active rules
+     * Example: [
+     *   'hubspot' => [
+     *       'lifecyclestage' => 'customer',
+     *       'hs_lead_status' => 'OPEN',
+     *   ],
+     * ]
+     *
+     * @var array
+     */
+    private $activeRules = [];
+
+    /**
      * The CRM provider environment/s to use
      * (e.g. production, sandbox, etc.)
      *
@@ -222,6 +235,12 @@ class HubSpotController implements CrmControllerInterface
         $this->deleteRules = [];
         $this->deleteRules['hard_delete'] = $model->syncModelCrmDeleteRules['hard_delete'][self::PROVIDER] ?? null;
         $this->deleteRules['soft_delete'] = $model->syncModelCrmDeleteRules['soft_delete'][self::PROVIDER] ?? null;
+        $this->logger->infoLow('Delete rules set: ' . json_encode($this->deleteRules));
+
+        // --------------------------------------------------------------
+        // set the model active rules
+        $this->activeRules = $model->syncModelCrmActiveRules[self::PROVIDER] ?? null;
+        $this->logger->infoLow('Active rules set: ' . json_encode($this->activeRules));
 
         // all seems good
         return $this;
@@ -406,6 +425,9 @@ class HubSpotController implements CrmControllerInterface
             throw new Exception('HubSpot object properties not set. First set the properties using the `setup` method.');
         }
 
+        // set the final create properties
+        $properties = array_merge($this->properties, $this->activeRules);
+
         // ------------------------------
         // load the object according to its type
         switch ($this->crmObjectType) {
@@ -413,7 +435,7 @@ class HubSpotController implements CrmControllerInterface
                 try {
                     $this->crmObject = $this->client->crm()->contacts()->basicApi()->create(
                         new ContactSimplePublicObjectInput(
-                            ['properties' => $this->properties]
+                            ['properties' => $properties]
                         )
                     );
                 } catch (ContactApiException $ex) {
@@ -428,7 +450,7 @@ class HubSpotController implements CrmControllerInterface
                 try {
                     $this->crmObject = $this->client->crm()->companies()->basicApi()->create(
                         new CompanySimplePublicObjectInput(
-                            ['properties' => $this->properties]
+                            ['properties' => $properties]
                         )
                     );
                 } catch (CompanyApiException $ex) {
