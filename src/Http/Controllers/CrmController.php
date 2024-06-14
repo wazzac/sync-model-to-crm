@@ -22,6 +22,15 @@ use Exception;
 
 class CrmController extends BaseController
 {
+    // single execute() actions
+    public const EXEC_ACTION_CREATE = 'create';
+    public const EXEC_ACTION_UPDATE = 'update';
+    public const EXEC_ACTION_DELETE = 'delete';
+    public const EXEC_ACTION_RESTORE = 'restore';
+
+    // multiple execute() actions
+    public const EXEC_ACTION_CREATE_UPDATE = 'create_update';
+
     /**
      * The CRM provider environment/s to use (e.g. production, sandbox, etc.)
      * Use an array to sync to multiple environments.
@@ -83,7 +92,8 @@ class CrmController extends BaseController
      * @throws NotFoundExceptionInterface
      * @throws ContainerExceptionInterface
      */
-    public function __construct(string $logIdentifier = null) {
+    public function __construct(string $logIdentifier = null)
+    {
         // parent constructor
         parent::__construct($logIdentifier);
 
@@ -219,13 +229,16 @@ class CrmController extends BaseController
      *
      * @param \Illuminate\Database\Eloquent\Model $model The model to sync
      * @param bool $processDelete This defines if the CRM record should be deleted/archived if the local record is deleted/archived
-     * @param string|array|null $processEnvironment This defines the environment to sync to (e.g. production, sandbox, etc.)
-     * @param string|array|null $processProvider This defines the CRM provider to sync to (e.g. hubspot, salesforce, etc.)
+     * @param string|array|null $actionEnvironment This defines the environment to sync to (e.g. production, sandbox, etc.)
+     * @param string|array|null $actionProvider This defines the CRM provider to sync to (e.g. hubspot, salesforce, etc.)
      * @return void
      */
-    public function execute($processDelete = false, $processEnvironment = null, $processProvider = null)
+    public function execute($action = self::EXEC_ACTION_CREATE_UPDATE, $actionEnvironment = null, $actionProvider = null)
     {
         $this->logger->infoMid('Execute the CRM Sync process.');
+
+        // --------------------------------------------------------------
+        // --- validation -----------------------------------------------
 
         // make sure we have a model to sync
         if (empty($this->model)) {
@@ -250,19 +263,27 @@ class CrmController extends BaseController
             $this->environment = [$this->environment];
         }
 
+        // --------------------------------------------------------------
+        // --- process the CRM sync -------------------------------------
+
         // loop the crm environments and initiate each CRM sync individually
         foreach ($this->environment as $environment) {
+            // --------------------------------------------------------------
             // check if we can process this environment
-            if (!$this->processEnvironment($environment, $processEnvironment)) {
+            if (!$this->processEnvironment($environment, $actionEnvironment)) {
                 $this->logger->infoLow('[' . $environment . '] Skipping environment...');
                 continue;
             }
             $this->logger->infoLow('[' . $environment . '] Commence Crm Sync under the `' . $environment . '` environment.');
 
+            // --------------------------------------------------------------
             // loop the property mappings
             foreach ($this->propertyMapping as $provider => $mapping) {
+                // --------------------------------------------------------------
+                // --- crm level validation and then binding --------------------
+
                 // check if we can process this provider
-                if (!$this->processProvider($provider, $processProvider)) {
+                if (!$this->processProvider($provider, $actionProvider)) {
                     $this->logger->infoLow('[' . $environment . '][' . $provider . '] Skipping provider...');
                     continue;
                 }
@@ -280,7 +301,6 @@ class CrmController extends BaseController
 
                 // --------------------------------------------------------------
                 // -- initiate the crm sync request on the binded provider class
-                // --------------------------------------------------------------
 
                 /**
                  * initiate the crm sync request on the binded provider class
@@ -309,22 +329,53 @@ class CrmController extends BaseController
                 // load the crm data (if exists)
                 $crmObject->load($keyLookup->ext_object_id ?? null, $crmFilters);
 
-                // located the user record, lets continue to update it
-                if ($crmObject->getCrmObjectItem() !== null) {
-                    if ($processDelete) {
-                        // process delete
-                        $crmObject->logger->infoLow('CRM Object found. Deleting...');
-                        $crmObject->delete();
-                    }
-                    else {
-                        // process update
-                        $crmObject->logger->infoLow('CRM Object found. Updating...');
-                        $crmObject->update();
-                    }
-                } else {
-                    // process insert
-                    $crmObject->logger->infoLow('CRM Object not found. Creating...');
-                    $crmObject->create();
+                // define what action is requested (create, update, delete, restore, create_update)
+                switch ($action) {
+                    case self::EXEC_ACTION_CREATE_UPDATE:
+                    case self::EXEC_ACTION_CREATE:
+                        // make sure that we only create if no object could be loaded
+                        // important: model property `syncModelCrmPropertyMapping` should be defined
+                        if ($crmObject->getCrmObjectItem() === null) {
+                            // process insert
+                            $crmObject->logger->infoLow('CRM Object not found. Creating...');
+                            $crmObject->create();
+                        }
+                        break;
+
+                    case self::EXEC_ACTION_CREATE_UPDATE:
+                    case self::EXEC_ACTION_UPDATE:
+                        // make sure that we only create if no object could be loaded
+                        // important: model property `syncModelCrmPropertyMapping` should be defined
+                        if ($crmObject->getCrmObjectItem() !== null) {
+                            // process update
+                            $crmObject->logger->infoLow('CRM Object found. Updating...');
+                            $crmObject->update();
+                        }
+                        break;
+
+                    case self::EXEC_ACTION_DELETE:
+                        // make sure that we only create if no object could be loaded
+                        // important: model property `syncModelCrmDeleteRules` should be defined
+                        if ($crmObject->getCrmObjectItem() !== null) {
+                            // process delete
+                            $crmObject->logger->infoLow('CRM Object found. Deleting...');
+                            $crmObject->delete();
+                        }
+                        break;
+
+                    case self::EXEC_ACTION_RESTORE:
+                        // make sure that we only create if no object could be loaded
+                        // important: model property `syncModelCrmActiveRules` should be defined
+                        if ($crmObject->getCrmObjectItem() !== null) {
+                            // process restore
+                            $crmObject->logger->infoLow('CRM Object found. Restoring...');
+                            $crmObject->update();
+                        }
+                        break;
+
+                    default:
+                        $this->logger->errorMid('Invalid action requested `' . $action . '`.');
+                        break;
                 }
 
                 // if the $keyLookup result was empty, then create a new record in the object mapping table
@@ -338,13 +389,13 @@ class CrmController extends BaseController
                     $keyLookup->ext_environment = $environment;
                     $keyLookup->ext_object_id   = $crmRecord['id'];
                     $keyLookup->save();
-                    $crmObject->logger->infoLow('CRM Object Key Lookup created. `' . $keyLookup->object_id . '` to `'.$keyLookup->ext_object_id.'`');
+                    $crmObject->logger->infoLow('CRM Object Key Lookup created. `' . $keyLookup->object_id . '` to `' . $keyLookup->ext_object_id . '`');
                 }
 
                 // done, next provider
                 $crmObject->logger->infoLow('CRM Sync completed.');
 
-                // -- cleanup
+                // -- cleanup, onto next provider
                 $crmObject->disconnect();
                 unset($crmObject);
             }
@@ -375,7 +426,7 @@ class CrmController extends BaseController
         if (
             !empty($requestedEnvironment) &&
             (
-                (is_array($requestedEnvironment) && !in_array($currentEnvironment, $processEnvironment)) ||
+                (is_array($requestedEnvironment) && !in_array($currentEnvironment, $actionEnvironment)) ||
                 $requestedEnvironment !== $currentEnvironment
             )
         ) {

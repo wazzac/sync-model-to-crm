@@ -55,6 +55,29 @@ class HubSpotController implements CrmControllerInterface
     public const CRM_CONTACT_LEAD_STATUS__BAD_TIMING            = 'BAD_TIMING';
     public const CRM_CONTACT_LEAD_STATUS__DELETED               = 'DELETED';
 
+    // --- Associations types
+    // @link https://developers.hubspot.com/docs/api/crm/associations
+    // Company to ...
+    public const ASSOCIATION_TYPE_ID__COMPANY_TO_CONTACT_PRIMARY    = 2;
+    public const ASSOCIATION_TYPE_ID__COMPANY_TO_CONTACT            = 280;
+    public const ASSOCIATION_TYPE_ID__COMPANY_TO_DEAL_PRIMARY       = 6;
+    public const ASSOCIATION_TYPE_ID__COMPANY_TO_DEAL               = 342;
+    public const ASSOCIATION_TYPE_ID__COMPANY_TO_TICKET_PRIMARY     = 25;
+    public const ASSOCIATION_TYPE_ID__COMPANY_TO_TICKET             = 340;
+    public const ASSOCIATION_TYPE_ID__COMPANY_TO_PARENT_COMPANY     = 14;
+    public const ASSOCIATION_TYPE_ID__COMPANY_TO_CHILD_COMPANY      = 13;
+    // Contact to ...
+    public const ASSOCIATION_TYPE_ID__CONTACT_TO_COMPANY_PRIMARY    = 1;
+    public const ASSOCIATION_TYPE_ID__CONTACT_TO_COMPANY            = 279;
+    public const ASSOCIATION_TYPE_ID__CONTACT_TO_CONTACT            = 279;
+    public const ASSOCIATION_TYPE_ID__CONTACT_TO_DEAL               = 4;
+    public const ASSOCIATION_TYPE_ID__CONTACT_TO_TICKET             = 15;
+    // Deal to ...
+    public const ASSOCIATION_TYPE_ID__DEAL_TO_DEAL                  = 451;
+    public const ASSOCIATION_TYPE_ID__DEAL_TO_CONTACT               = 3;
+    public const ASSOCIATION_TYPE_ID__DEAL_TO_COMPANY_PRIMARY       = 5;
+    public const ASSOCIATION_TYPE_ID__DEAL_TO_TICKET                = 27;
+
     /**
      * The logger instance
      *
