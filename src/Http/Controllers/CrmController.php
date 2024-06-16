@@ -6,6 +6,7 @@ use Wazza\SyncModelToCrm\Http\Controllers\BaseController;
 use Wazza\SyncModelToCrm\Models\SmtcExternalKeyLookup;
 use Wazza\SyncModelToCrm\Http\Contracts\CrmControllerInterface;
 use Illuminate\Support\Facades\App;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Psr\Container\NotFoundExceptionInterface;
 use Psr\Container\ContainerExceptionInterface;
@@ -84,6 +85,16 @@ class CrmController extends BaseController
     private $model;
 
     /**
+     * This is the associated crm object and local model structure.
+     * i.e. ['crm_object' => '{Model|Model[]}', 'company' => $user->entity, ...]
+     *
+     * This will only work if the Model has the `syncModelCrmAssociateRules` property set.
+     *
+     * @var array
+     */
+    private $associatedObjectVsModel = [];
+
+    /**
      * Create a new CrmController instance and define the log identifier (blank will create a new one)
      *
      * @param string|null $logIdentifier
@@ -158,10 +169,10 @@ class CrmController extends BaseController
      * Set the model to sync.
      * This Method will also set the default environment, property mapping and unique filters defined in the Model
      *
-     * @param \Illuminate\Database\Eloquent\Model $model
+     * @param \Illuminate\Database\Eloquent\Model|null $model
      * @return CrmController
      */
-    public function setModel($model)
+    public function setModel(Model $model = null, array|null $objectVsModel = null)
     {
         // -- set the model
         $this->model = $model;
@@ -172,7 +183,26 @@ class CrmController extends BaseController
         $this->setPropertyMapping($model->syncModelCrmPropertyMapping ?? []);
         $this->setUniqueFilters($model->syncModelCrmUniqueSearch ?? []);
 
+        // -- set the associated models
+        if (!is_null($objectVsModel) && is_array($objectVsModel)) {
+            $this->setAssociatedObjectVsModel($objectVsModel);
+        }
+
         // done
+        return $this;
+    }
+
+    /**
+     * Set the Associated Models
+     * ['crm_object' => '{Model|Model[]}', 'company' => $user->entity, ...]
+     *
+     * @var array $objectVsModel
+     * @return CrmController
+     */
+    public function setAssociatedObjectVsModel(array $objectVsModel = [])
+    {
+        $this->associatedObjectVsModel = $objectVsModel ?? [];
+        $this->logger->infoLow('Crm Associated Models set as: `' . json_encode($this->associatedObjectVsModel) . '`');
         return $this;
     }
 
@@ -220,6 +250,16 @@ class CrmController extends BaseController
         return $this->model;
     }
 
+    /**
+     * Get the Associated Models
+     *
+     * @return array
+     */
+    public function getAssociatedObjectVsModel()
+    {
+        return $this->associatedObjectVsModel;
+    }
+
     // --------------------------------------------------------------
     // -- action methods
     // --------------------------------------------------------------
@@ -229,11 +269,12 @@ class CrmController extends BaseController
      *
      * @param \Illuminate\Database\Eloquent\Model $model The model to sync
      * @param bool $processDelete This defines if the CRM record should be deleted/archived if the local record is deleted/archived
+     * @param bool $associate Should associations be processed
      * @param string|array|null $actionEnvironment This defines the environment to sync to (e.g. production, sandbox, etc.)
      * @param string|array|null $actionProvider This defines the CRM provider to sync to (e.g. hubspot, salesforce, etc.)
      * @return void
      */
-    public function execute($action = self::EXEC_ACTION_CREATE_UPDATE, $actionEnvironment = null, $actionProvider = null)
+    public function execute($action = self::EXEC_ACTION_CREATE_UPDATE, $associate = false, $actionEnvironment = null, $actionProvider = null)
     {
         $this->logger->infoMid('Execute the CRM Sync process.');
 
@@ -288,10 +329,20 @@ class CrmController extends BaseController
                     continue;
                 }
 
+                // get the object table mapping
+                $configObjectTableMapping = config('sync_modeltocrm.api.providers.' . $provider . '.object_table_mapping');
+                if (empty($configObjectTableMapping)) {
+                    throw new Exception('No provider object table mapping found for `' . $provider . '`.');
+                }
+
+                // set the object type to be used
+                // contact, company, deal etc.
+                $objectType = $this->model->syncModelCrmRelatedObject ?? array_search($this->model->getTable(), $configObjectTableMapping);
+
                 // load the correct CRM provider controller
                 $providerController = config('sync_modeltocrm.api.providers.' . $provider . '.controller');
                 if (empty($providerController)) {
-                    $this->logger->errorMid('No provider controller found for ' . $provider);
+                    $this->logger->errorMid('No provider controller found for `' . $provider . '`.');
                     throw new Exception('No provider controller found for ' . $provider);
                 }
 
@@ -321,6 +372,7 @@ class CrmController extends BaseController
                     ->where('object_type', $this->model->getTable())
                     ->where('ext_provider', $provider)
                     ->where('ext_environment', $environment)
+                    ->where('ext_object_type', $objectType)
                     ->first();
 
                 // get the search filters
@@ -332,6 +384,19 @@ class CrmController extends BaseController
                 // define what action is requested (create, update, delete, restore, create_update)
                 switch ($action) {
                     case self::EXEC_ACTION_CREATE_UPDATE:
+                        // make sure that we only create if no object could be loaded
+                        // important: model property `syncModelCrmPropertyMapping` should be defined
+                        if ($crmObject->getCrmObjectItem() === null) {
+                            // process insert
+                            $crmObject->logger->infoLow('CRM Object not found. Creating...');
+                            $crmObject->create();
+                        } else {
+                            // process update
+                            $crmObject->logger->infoLow('CRM Object found. Updating...');
+                            $crmObject->update();
+                        }
+                        break;
+
                     case self::EXEC_ACTION_CREATE:
                         // make sure that we only create if no object could be loaded
                         // important: model property `syncModelCrmPropertyMapping` should be defined
@@ -342,7 +407,6 @@ class CrmController extends BaseController
                         }
                         break;
 
-                    case self::EXEC_ACTION_CREATE_UPDATE:
                     case self::EXEC_ACTION_UPDATE:
                         // make sure that we only create if no object could be loaded
                         // important: model property `syncModelCrmPropertyMapping` should be defined
@@ -387,13 +451,100 @@ class CrmController extends BaseController
                     $keyLookup->object_type     = $this->model->getTable();
                     $keyLookup->ext_provider    = $provider;
                     $keyLookup->ext_environment = $environment;
+                    $keyLookup->ext_object_type = $objectType;
                     $keyLookup->ext_object_id   = $crmRecord['id'];
                     $keyLookup->save();
+                    // log it...
                     $crmObject->logger->infoLow('CRM Object Key Lookup created. `' . $keyLookup->object_id . '` to `' . $keyLookup->ext_object_id . '`');
                 }
 
                 // done, next provider
                 $crmObject->logger->infoLow('CRM Sync completed.');
+
+                // process the associations
+                if ($associate && !empty($this->associatedObjectVsModel)) {
+                    // loop the provided crm objects and models
+                    foreach ($this->associatedObjectVsModel as $associatedObject => $associatedModel) {
+                        // make sure we received the correct object and model structure
+                        if (!array_key_exists($associatedObject, $configObjectTableMapping)) {
+                            $associatedObject = $associatedModel->syncModelCrmRelatedObject ?? array_search($associatedModel->getTable(), $configObjectTableMapping);
+                        }
+
+                        // look if the associated model has already been saved in the object mapping table
+                        $assocKeyLookup = SmtcExternalKeyLookup::where('object_id', $associatedModel->id)
+                            ->where('object_type', $associatedModel->getTable())
+                            ->where('ext_provider', $provider)
+                            ->where('ext_environment', $environment)
+                            ->where('ext_object_type', $associatedObject)
+                            ->first();
+
+                        // if we have no internal mapping for the associated object, then we need to create it
+                        if (empty($assocKeyLookup)) {
+                            /**
+                             * @var CrmControllerInterface $crmAssocObject
+                             */
+                            $crmAssocObject = App::make(CrmControllerInterface::class);
+
+                            // connect to the crm provider environment and provide the same log identifier
+                            $crmAssocObject->connect($environment, $crmObject->logger->getLogIdentifier() . '[assoc: ' . $associatedObject . ']');
+                            $crmAssocObject->logger->infoLow('Connected to Provider environment `' . $environment . '`.');
+
+                            // construct the crm property mapping, delete rules and unique filters
+                            $assocMapping = $associatedModel->syncModelCrmPropertyMapping[$provider] ?? [];
+                            $crmAssocObject->setup($associatedModel, $assocMapping);
+                            $crmAssocObject->logger->infoLow('CRM Property Mapping: ' . json_encode($assocMapping) . '.');
+
+                            // get the search filters
+                            $crmAssocFilters = $associatedModel->syncModelCrmUniqueSearch[$provider] ?? [];
+
+                            // load the crm data (if exists)
+                            $crmAssocObject->load(null, $crmAssocFilters);
+
+                            // for this we only create
+                            if ($crmAssocObject->getCrmObjectItem() === null) {
+                                // process insert
+                                $crmAssocObject->logger->infoLow('CRM Object not found. Creating...');
+                                $crmAssocObject->create();
+                            } else {
+                                // process update
+                                $crmAssocObject->logger->infoLow('CRM Object found. Updating...');
+                                $crmAssocObject->update();
+                            }
+
+                            // if the $keyLookup result was empty, then create a new record in the object mapping table
+                            $crmAssocRecord = $crmObject->getCrmObjectItem();
+                            if (isset($crmAssocRecord['id']) && !empty($crmAssocRecord['id'])) {
+                                // create a new record in the object mapping table
+                                $assocKeyLookup = new SmtcExternalKeyLookup();
+                                $assocKeyLookup->object_id       = $associatedModel->id;
+                                $assocKeyLookup->object_type     = $associatedModel->getTable();
+                                $assocKeyLookup->ext_provider    = $provider;
+                                $assocKeyLookup->ext_environment = $environment;
+                                $assocKeyLookup->ext_object_type = $associatedObject;
+                                $assocKeyLookup->ext_object_id   = $crmAssocRecord['id'];
+                                $assocKeyLookup->save();
+                                // log it...
+                                $crmAssocObject->logger->infoLow('CRM Object Key Lookup created. `' . $keyLookup->object_id . '` to `' . $keyLookup->ext_object_id . '`');
+                            }
+
+                            // -- cleanup, onto next provider
+                            $crmAssocObject->disconnect();
+                            unset($crmAssocObject);
+                        }
+
+                        // as a final check, make sure we have an $assocKeyLookup->ext_object_id set
+                        if (empty($assocKeyLookup->ext_object_id ?? null)) {
+                            $crmObject->logger->errorMid('No associated object key lookup found for `' . $associatedObject . '`.');
+                            continue;
+                        }
+
+                        // get the from object association specs
+                        $associationSpecs = $associatedModel->syncModelCrmAssociateRules[$provider] ?? [];
+
+                        // associate the current object with the associated object
+                        $crmObject->associate($associatedObject, $assocKeyLookup->ext_object_id, $associationSpecs);
+                    }
+                }
 
                 // -- cleanup, onto next provider
                 $crmObject->disconnect();

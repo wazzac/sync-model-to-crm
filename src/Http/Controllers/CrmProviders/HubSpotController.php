@@ -24,6 +24,8 @@ use HubSpot\Client\Crm\Companies\Model\PublicObjectSearchRequest as CompanyPubli
 use HubSpot\Client\Crm\Companies\ApiException as CompanyApiException;
 use HubSpot\Client\Crm\Companies\Model\CollectionResponseWithTotalSimplePublicObjectForwardPaging as CompanyCollectionResponseWithTotalSimplePublicObjectForwardPaging;
 
+use HubSpot\Client\Crm\Associations\V4\ApiException as AssociationsApiException;
+
 use Exception;
 
 class HubSpotController implements CrmControllerInterface
@@ -69,7 +71,7 @@ class HubSpotController implements CrmControllerInterface
     // Contact to ...
     public const ASSOCIATION_TYPE_ID__CONTACT_TO_COMPANY_PRIMARY    = 1;
     public const ASSOCIATION_TYPE_ID__CONTACT_TO_COMPANY            = 279;
-    public const ASSOCIATION_TYPE_ID__CONTACT_TO_CONTACT            = 279;
+    public const ASSOCIATION_TYPE_ID__CONTACT_TO_CONTACT            = 449;
     public const ASSOCIATION_TYPE_ID__CONTACT_TO_DEAL               = 4;
     public const ASSOCIATION_TYPE_ID__CONTACT_TO_TICKET             = 15;
     // Deal to ...
@@ -135,6 +137,13 @@ class HubSpotController implements CrmControllerInterface
      * @var array
      */
     private $activeRules = [];
+
+    /**
+     * The HubSpot object association rules
+     *
+     * @var array
+     */
+    private $associateRules = [];
 
     /**
      * The CRM provider environment/s to use
@@ -242,7 +251,7 @@ class HubSpotController implements CrmControllerInterface
             throw new Exception('No provider object table mapping found for Hubspot.');
         }
         // search for the object table name in the $objectTableMapping and return the key
-        $this->crmObjectType = array_search($model->getTable(), $objectTableMapping);
+        $this->crmObjectType = $model->syncModelCrmRelatedObject ?? array_search($model->getTable(), $objectTableMapping);
         $this->logger->infoLow('Object type set to: `' . $this->crmObjectType . '`.');
 
         // --------------------------------------------------------------
@@ -264,6 +273,11 @@ class HubSpotController implements CrmControllerInterface
         // set the model active rules
         $this->activeRules = $model->syncModelCrmActiveRules[self::PROVIDER] ?? null;
         $this->logger->infoLow('Active rules set: ' . json_encode($this->activeRules));
+
+        // --------------------------------------------------------------
+        // set the model association rules
+        $this->associateRules = $model->syncModelCrmAssociateRules[self::PROVIDER] ?? null;
+        $this->logger->infoLow('Association rules set: ' . json_encode($this->associateRules));
 
         // all seems good
         return $this;
@@ -513,9 +527,8 @@ class HubSpotController implements CrmControllerInterface
             throw new Exception('HubSpot object properties not set. First set the properties using the `setup` method.');
         }
 
-        // loaded object properties
-        $loadedContent = $this->getCrmObjectItem();
-        if (empty($loadedContent)) {
+        // make sure the object is loaded
+        if (!$this->crmObjectItemLoaded()) {
             throw new Exception('HubSpot object not loaded. First load the object using the `load` method.');
         }
 
@@ -525,7 +538,7 @@ class HubSpotController implements CrmControllerInterface
             case 'contact':
                 try {
                     $this->crmObjectItem = $this->client->crm()->contacts()->basicApi()->update(
-                        $loadedContent['id'],
+                        $this->crmObjectItem['id'],
                         new ContactSimplePublicObjectInput(
                             ['properties' => $this->properties]
                         )
@@ -541,7 +554,7 @@ class HubSpotController implements CrmControllerInterface
             case 'company':
                 try {
                     $this->crmObjectItem = $this->client->crm()->companies()->basicApi()->update(
-                        $loadedContent['id'],
+                        $this->crmObjectItem['id'],
                         new CompanySimplePublicObjectInput(
                             ['properties' => $this->properties]
                         )
@@ -610,9 +623,8 @@ class HubSpotController implements CrmControllerInterface
             }
         }
 
-        // loaded object properties
-        $loadedContent = $this->getCrmObjectItem();
-        if (empty($loadedContent)) {
+        // make sure the object is loaded
+        if (!$this->crmObjectItemLoaded()) {
             throw new Exception('HubSpot object not loaded. First load the object using the `load` method.');
         }
 
@@ -624,13 +636,12 @@ class HubSpotController implements CrmControllerInterface
                     // perform soft-delete update action
                     if ($soft) {
                         $this->crmObjectItem = $this->client->crm()->contacts()->basicApi()->update(
-                            $loadedContent['id'],
+                            $this->crmObjectItem['id'],
                             new ContactSimplePublicObjectInput(['properties' => $softDeleteRule])
                         );
-                    }
-                    else {
+                    } else {
                         // perform hard-delete action
-                        $this->client->crm()->contacts()->basicApi()->archive($loadedContent['id']);
+                        $this->client->crm()->contacts()->basicApi()->archive($this->crmObjectItem['id']);
                     }
                 } catch (ContactApiException $ex) {
                     $this->logger->errorHigh('Error updating contact: ' . $ex->getMessage());
@@ -645,13 +656,12 @@ class HubSpotController implements CrmControllerInterface
                     // perform soft-delete update action
                     if ($soft) {
                         $this->crmObjectItem = $this->client->crm()->companies()->basicApi()->update(
-                            $loadedContent['id'],
+                            $this->crmObjectItem['id'],
                             new CompanySimplePublicObjectInput(['properties' => $softDeleteRule])
                         );
-                    }
-                    else {
+                    } else {
                         // perform hard-delete action
-                        $this->client->crm()->companies()->basicApi()->archive($loadedContent['id']);
+                        $this->client->crm()->companies()->basicApi()->archive($this->crmObjectItem['id']);
                     }
                 } catch (CompanyApiException $ex) {
                     $this->logger->errorHigh('Error updating company: ' . $ex->getMessage());
@@ -670,8 +680,92 @@ class HubSpotController implements CrmControllerInterface
         return $this;
     }
 
-    public function associate()
+    /**
+     * Load, compare and sync the model associations to the CRM
+     *
+     * @var array $associatedObjectVsModel The array containing the [`crm_object` => {Model}, ...]
+     */
+    public function associate($toObjectType, $toObjectId, $associationSpec)
     {
+        $this->logger->infoMid('Process object associations...');
+
+        // make sure we have an object type
+        if (empty($toObjectType)) {
+            throw new Exception('HubSpot object type not set.');
+        }
+
+        // make sure we have an object id
+        if (empty($toObjectId)) {
+            throw new Exception('HubSpot object id not set.');
+        }
+
+        // make sure the object is loaded
+        if (!$this->crmObjectItemLoaded()) {
+            throw new Exception('HubSpot object not loaded. First load the object setup the `load` method.');
+        }
+
+        // make sure we have a crm object type
+        if (empty($this->crmObjectType)) {
+            throw new Exception('HubSpot object type not set. First set the object type using the `setup` method.');
+        }
+
+        // make sure we have association rules set, if not; simply return the object and log a note
+        if (empty($associationSpec)) {
+            $this->logger->infoMid('No association rules set. Skipping association process.');
+            return $this;
+        }
+
+        // good to proceed with the api, we have what we need
+        try {
+            // ------------------------------
+            // load the current object associations
+            $currentAssociations = $this->client
+                ->crm()
+                ->associations()
+                ->v4()
+                ->basicApi()
+                ->getPage(
+                    $this->crmObjectType,
+                    $this->crmObjectItem['id'],
+                    $toObjectType,
+                    500
+                );
+
+            dd($currentAssociations);
+        } catch (AssociationsApiException $ex) {
+            $this->logger->errorHigh('Error with object association: ' . $ex->getMessage());
+        } catch (Exception $e) {
+            $this->logger->errorHigh('Error with object association: ' . $e->getMessage());
+        }
+
+
+        // create the association
+        $this->client->crm()->associations()->v4()->basicApi()->create(
+            $fromObjectType,
+            $fromObjectId,
+            $toObjectType,
+            $toObjectId,
+            $associationSpec
+        );
+
+
+        $t1 = $this->client->crm()->associations()->v4()->basicApi()->getPage('contact', $this->crmObjectItem['id'], 'company', 500);
+        dd($t1);
+
+        $associationSpec2 = new AssociationSpec([
+            'association_category' => 'HUBSPOT_DEFINED',
+            'association_type_id' => 0
+        ]);
+        $t2 = $this->client->crm()->associations()->v4()->basicApi()->create('objectType', 'objectId', 'toObjectType', 'toObjectId', [$associationSpec2]);
+        var_dump($t2);
+
+        // create the association
+        $t3 = $this->client->crm()->deals()->associationsApi()->create(
+            $dealId,
+            $objectType,
+            $objectId,
+            $association​Type
+        );
     }
 
     // --------------------------------------------------------------
