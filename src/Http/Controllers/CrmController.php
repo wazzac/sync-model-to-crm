@@ -607,6 +607,8 @@ class CrmController extends BaseController
                         // associate the current object with the associated object
                         $crmObject->associate($associatedObject, $assocKeyLookup->ext_object_id, $associationSpecs);
                     }
+                } else {
+                    $crmObject->logger->infoLow('No associations to process.');
                 }
 
                 // -- cleanup, onto next provider
