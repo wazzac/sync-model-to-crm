@@ -24,6 +24,7 @@ use HubSpot\Client\Crm\Companies\Model\PublicObjectSearchRequest as CompanyPubli
 use HubSpot\Client\Crm\Companies\ApiException as CompanyApiException;
 use HubSpot\Client\Crm\Companies\Model\CollectionResponseWithTotalSimplePublicObjectForwardPaging as CompanyCollectionResponseWithTotalSimplePublicObjectForwardPaging;
 
+use HubSpot\Client\Crm\Associations\V4\Model\AssociationSpec as AssociationSpec;
 use HubSpot\Client\Crm\Associations\V4\ApiException as AssociationsApiException;
 
 use Exception;
@@ -57,8 +58,10 @@ class HubSpotController implements CrmControllerInterface
     public const CRM_CONTACT_LEAD_STATUS__BAD_TIMING            = 'BAD_TIMING';
     public const CRM_CONTACT_LEAD_STATUS__DELETED               = 'DELETED';
 
-    // --- Associations types
+    // --- Associations types & categories
     // @link https://developers.hubspot.com/docs/api/crm/associations
+    public const ASSOCIATION_CATEGORY__HUBSPOT_DEFINED = 'HUBSPOT_DEFINED'; // this is the default category with type ids listed in the url above
+
     // Company to ...
     public const ASSOCIATION_TYPE_ID__COMPANY_TO_CONTACT_PRIMARY    = 2;
     public const ASSOCIATION_TYPE_ID__COMPANY_TO_CONTACT            = 280;
@@ -683,11 +686,13 @@ class HubSpotController implements CrmControllerInterface
     /**
      * Load, compare and sync the model associations to the CRM
      *
-     * @var array $associatedObjectVsModel The array containing the [`crm_object` => {Model}, ...]
+     * @var string $toObjectType The object type to associate to. Options: contacts, companies, deals, tickets
+     * @var string $toObjectId The object id to associate to (PK)
+     * @var array $associationSpec The array containing association specification. Example: [['association_type_id' => 1, 'association_category' => 'HUBSPOT_DEFINED', [... ]]
      */
-    public function associate($toObjectType, $toObjectId, $associationSpec)
+    public function associate(string $toObjectType, string $toObjectId, array $associationSpec = [])
     {
-        $this->logger->infoMid('Process object associations...');
+        $this->logger->infoMid('Process Associations...', [], $toObjectType);
 
         // make sure we have an object type
         if (empty($toObjectType)) {
@@ -711,7 +716,7 @@ class HubSpotController implements CrmControllerInterface
 
         // make sure we have association rules set, if not; simply return the object and log a note
         if (empty($associationSpec)) {
-            $this->logger->infoMid('No association rules set. Skipping association process.');
+            $this->logger->infoMid('No association rules set. Skipping association process.', [], $toObjectType);
             return $this;
         }
 
@@ -731,41 +736,89 @@ class HubSpotController implements CrmControllerInterface
                     500
                 );
 
-            dd($currentAssociations);
+            // ------------------------------
+            // loop through the current associations defined in $currentAssociations and compare with the $associationSpec; any missing associations will be created and any extra associations will be removed
+            // check if the association exists in the current associations
+            $assocExists = false;
+            $nonExistingObjectIds = [];
+
+            // only action if we have associated objects
+            if (!empty($currentAssociations['results'])) {
+                // loop through the current associations
+                foreach ($currentAssociations['results'] as $currentAssoc) {
+                    // check if one of the associations match the the current object id
+                    if ($currentAssoc['to_object_id'] == $toObjectId) {
+                        // yes it does exists...
+                        $assocExists = true;
+
+                        // check if the association specs match
+                        if (!$this->matchAssociationSpecs($associationSpec, $currentAssoc['association_types'])) {
+                            $this->logger->infoLow('Association specs do not match. Object ID: ' . $toObjectId . '; Type: ' . $toObjectType . '; Required Spec: ' . json_encode($associationSpec) . '; Current Spec: ' . json_encode($currentAssoc['association_types']), [], $toObjectType);
+
+                            $nonExistingObjectIds[] = $currentAssoc['to_object_id'];
+                            $assocExists = false;
+                            $this->logger->infoLow('The association specs does NOT match. Marked the associations for replacement...', [], $toObjectType);
+                        }
+                        else {
+                            $this->logger->infoLow('The association specs match. Object ID: ' . $toObjectId . '; Type: ' . $toObjectType . '; Association Spec: ' . json_encode($associationSpec), [], $toObjectType);
+                        }
+
+                        // all good, continue to next record
+                        continue;
+                    }
+
+                    // add to the non-existing object ids list - these will have to be deleted
+                    $nonExistingObjectIds[] = $currentAssoc['to_object_id'];
+                }
+            }
+
+            // delete all associations between two records
+            if (!empty($nonExistingObjectIds)) {
+                foreach ($nonExistingObjectIds as $nonExistingObjectId) {
+                    $this->client->crm()->associations()->v4()->basicApi()->archive(
+                        $this->crmObjectType,
+                        $this->crmObjectItem['id'],
+                        $toObjectType,
+                        $nonExistingObjectId
+                    );
+                    $this->logger->infoLow('Association deleted. Object ID: ' . $nonExistingObjectId . '; Type: ' . $toObjectType, [], $toObjectType);
+                }
+            }
+            else {
+                $this->logger->infoLow('No associations to delete.', [], $toObjectType);
+            }
+
+            // create the association if it does not exist
+            if (!$assocExists) {
+                // loop the association specs and create the association
+                $postSpec = [];
+                foreach ($associationSpec as $assocSpec) {
+                    $postSpec[] = new AssociationSpec([
+                        'association_category' => $assocSpec['association_category'],
+                        'association_type_id' => $assocSpec['association_type_id']
+                    ]);
+                }
+                // init the POST create request
+                $this->client->crm()->associations()->v4()->basicApi()->create(
+                    $this->crmObjectType,
+                    $this->crmObjectItem['id'],
+                    $toObjectType,
+                    $toObjectId,
+                    $postSpec
+                );
+                $this->logger->infoLow('Association created. Object ID: ' . $toObjectId . '; Type: ' . $toObjectType . '; Association Spec: ' . json_encode($associationSpec), [], $toObjectType);
+            }
+            else {
+                $this->logger->infoLow('No associations to create/add.', [], $toObjectType);
+            }
+
+            // all done
+            $this->logger->infoMid('Associations processed.', [], $toObjectType);
         } catch (AssociationsApiException $ex) {
             $this->logger->errorHigh('Error with object association: ' . $ex->getMessage());
         } catch (Exception $e) {
             $this->logger->errorHigh('Error with object association: ' . $e->getMessage());
         }
-
-
-        // create the association
-        $this->client->crm()->associations()->v4()->basicApi()->create(
-            $fromObjectType,
-            $fromObjectId,
-            $toObjectType,
-            $toObjectId,
-            $associationSpec
-        );
-
-
-        $t1 = $this->client->crm()->associations()->v4()->basicApi()->getPage('contact', $this->crmObjectItem['id'], 'company', 500);
-        dd($t1);
-
-        $associationSpec2 = new AssociationSpec([
-            'association_category' => 'HUBSPOT_DEFINED',
-            'association_type_id' => 0
-        ]);
-        $t2 = $this->client->crm()->associations()->v4()->basicApi()->create('objectType', 'objectId', 'toObjectType', 'toObjectId', [$associationSpec2]);
-        var_dump($t2);
-
-        // create the association
-        $t3 = $this->client->crm()->deals()->associationsApi()->create(
-            $dealId,
-            $objectType,
-            $objectId,
-            $association​Type
-        );
     }
 
     // --------------------------------------------------------------
@@ -862,5 +915,48 @@ class HubSpotController implements CrmControllerInterface
             return null;
         }
         return $this->crmObject['paging'] ?? null;
+    }
+
+    /**
+     * Match the association specs to see if they are the same
+     * Example:
+     *  $localSetup = [
+     *      ['association_category' => "HUBSPOT_DEFINED", 'association_type_id' => 12],
+     *      ['association_category' => "HUBSPOT_DEFINED", 'association_type_id' => 279],
+     *  ];
+     *
+     *  $remoteSetup = [
+     *      ['category' => "HUBSPOT_DEFINED", 'type_id' => 1, 'label' => "Primary"],
+     *      ['category' => "HUBSPOT_DEFINED", 'type_id' => 279, 'label' => null],
+     *  ];
+     *
+     * @param array $localSetup
+     * @param array $remoteSetup
+     * @return bool
+     */
+    private function matchAssociationSpecs(array $localSetup = [], array $remoteSetup = []) {
+        // If arrays have different lengths, they cannot match
+        if (count($localSetup) !== count($remoteSetup)) {
+            return false;
+        }
+
+        // Sort both arrays to ensure order doesn't affect comparison
+        usort($localSetup, function ($a, $b) {
+            return ($a['association_category'] <=> $b['association_category']) ?: ($a['association_type_id'] <=> $b['association_type_id']);
+        });
+        usort($remoteSetup, function ($a, $b) {
+            return ($a['category'] <=> $b['category']) ?: ($a['type_id'] <=> $b['type_id']);
+        });
+
+        // Compare each element in the sorted arrays
+        foreach ($localSetup as $index => $item1) {
+            $item2 = $remoteSetup[$index];
+
+            if ($item1['association_category'] !== $item2['category'] || $item1['association_type_id'] !== $item2['type_id']) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

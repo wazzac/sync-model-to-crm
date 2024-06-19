@@ -12,7 +12,7 @@ interface CrmControllerInterface
      * @param string|null $environment
      * @param string|null $logIdentifier
      */
-    public function connect(?string $environment, ?string $logIdentifier);
+    public function connect(?string $environment = 'sandbox', ?string $logIdentifier = null);
 
     /**
      * Flush the API client
@@ -78,12 +78,16 @@ interface CrmControllerInterface
     /**
      * Delete data in the chosen CRM API
      */
-    public function delete();
+    public function delete($soft = true);
 
     /**
      * Associate data between different objects in the crm
      */
-    public function associate();
+    public function associate(string $toObjectType, string $toObjectId, array $associationSpec = []);
+
+    // --------------------------------------------------------------
+    // --- helpers
+    // --------------------------------------------------------------
 
     /**
      * Check if the CRM object is loaded (has multiple data set)

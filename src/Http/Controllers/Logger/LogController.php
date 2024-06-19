@@ -58,7 +58,7 @@ final class LogController
      *
      * @param string|null $identifier The log identifier for session tracking - i.e. using grep to find related logs
      */
-    public function setLogIdentifier(?string $identifier = null): void
+    public function setLogIdentifier(?string $identifier = null, $append = false): void
     {
         // no identifier provided, generate one
         if (empty($identifier)) {
@@ -73,7 +73,14 @@ final class LogController
         if (substr($identifier, -1) !== ']') {
             $identifier = $identifier . ']';
         }
-        $this->logIdentifier = $identifier;
+
+        // set the identifier
+        if ($append) {
+            $this->logIdentifier .= $identifier;
+        }
+        else {
+            $this->logIdentifier = $identifier;
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -500,7 +507,30 @@ final class LogController
 
         // make sure we can log - take the config level into account
         if ($level <= $logConf['level'] && $level > 0) {
-            Log::$type('[' . $logConf['indicator'] . ']' . $this->logIdentifier . (!empty($logIdentifier) ? '[' . $logIdentifier . '] ' : ' ') . $string, $context);
+            // construct the log string
+            $logString = '[' . $logConf['indicator'] . ']';
+            $logString .= $this->logIdentifier;
+
+            // if $logIdentifier is provided and it already has block brackets, don't add another set when appending to $logString
+            if (!empty($logIdentifier)) {
+                if (substr($logIdentifier, 0, 1) === '[' && substr($logIdentifier, -1) === ']'){
+                    $logString .= $logIdentifier;
+                }
+                else {
+                    $logString .= '[' . $logIdentifier . ']';
+                }
+            }
+
+            // if the first letter of $string is '[' then don't add a space
+            if (substr($string, 0, 1) !== '[') {
+                $logString .= ' ';
+            }
+
+            // add the string
+            $logString .= $string;
+
+            // log it
+            Log::$type($logString, $context);
         }
     }
 
