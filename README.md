@@ -4,7 +4,7 @@
 <a href="https://github.com/wazzac/sync-model-to-crm/blob/main/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/wazzac/sync-model-to-crm"></a>
 </p>
 
-# sync-model-to-crm
+# Synchronize a Model to a Remote Crm Object
 
 A library that will syncronise any defined database table properties (inside the Model) to an external Crm provider, like [HubSpot](https://www.hubspot.com/), [Pipedrive](https://www.pipedrive.com/en) and more.
 
@@ -15,16 +15,22 @@ The idea around this library is to make it very easy for a developer to define i
 After each first time successful sync, the CRM Object primary key will be stored in a mapping table against the local table primary key. This allows for quicker loading times for future changes.
 
 Update your Model with 4 properties that define the rules for 3rd-party CRM synchronization:
-- @var string|array|null `$syncModelCrmEnvironment`;
-- @var array `$syncModelCrmPropertyMapping`;
+- @var string|array|null `$syncModelCrmEnvironment`; *Required
+- @var array `$syncModelCrmPropertyMapping`; *Required
 - @var array `$syncModelCrmUniqueSearch`;
 - @var string `$syncModelCrmRelatedObject`;
+- @var array `$syncModelCrmDeleteRules`;
+- @var array `$syncModelCrmActiveRules`;
+- @var array `$syncModelCrmAssociateRules`;
 
 Looking at the below example:
 1. the `User` Model will syncronize to both the `Sandbox` and `Production` **HubSpot** environments _($syncModelCrmEnvironment)_.
 2. It will only syncronize the `name` and `email` properties to the HubSpot corresponding `firstname` and `email` fields _($syncModelCrmPropertyMapping)_.
 3. When there is no internal mapping yet stored, the CRM record will be uniquely loaded using the `email` property _($syncModelCrmUniqueSearch)_.
 4. In order for the script to know which remote CRM object relates to the User model, `contact` _($syncModelCrmRelatedObject)_ have to be defined as the remote item.
+5. The _($syncModelCrmDeleteRules)_ property is used to instruct the Crm what action to take when a local record is deleted/removed. For example, when _SoftDeletes_ are enabled locally, the crm will use the `soft_delete` rules to update the crm records or alternatively Archive the record in the crm.
+6. The reverse to the above, _($syncModelCrmActiveRules)_ will be used to define the action that will be taken when deleted records are activated again.
+7. Finally, the non-required _($syncModelCrmAssociateRules)_ property is used to define the relationship (associations) between objects. e.g. `user` to `entity`.
 
 ```PHP
 class User extends Authenticatable
@@ -48,6 +54,7 @@ class User extends Authenticatable
 
     /**
      * Mapping array for local and CRM properties
+     * This will be the primary property used to cycle through the crm providers
      *
      * @var array
      */
@@ -72,10 +79,65 @@ class User extends Authenticatable
     /**
      * The CRM object to sync this model to.
      * This is the CRM object type (e.g. contact, company, deal, etc.)
+     * If this is null or not provided, the `object_table_mapping` key will be used from the config file.
      *
      * @var string
      */
     public $syncModelCrmRelatedObject = 'contact';
+
+    /**
+     * The Crm Delete rules to follow.
+     * i.e. if Soft-delete is applicable, what should the CRM record be updated to?
+     * if Hard-delete is used, the record will be deleted/archived in the CRM.
+     *
+     * @var array
+     */
+    public $syncModelCrmDeleteRules = [
+        'hard_delete' => [
+            'hubspot' => false,
+        ],
+        'soft_delete' => [
+            'hubspot' => [
+                'lifecyclestage' => 'other',
+                'hs_lead_status' => 'DELETED',
+            ],
+        ]
+    ];
+
+    /**
+     * The Crm Active/Restore rules to follow.
+     * These will be the rules to follow for any new entries that are not soft-deleted.
+     */
+    public $syncModelCrmActiveRules = [
+        'hubspot' => [
+            'lifecyclestage' => 'customer',
+            'hs_lead_status' => 'OPEN',
+        ],
+    ];
+
+    /**
+     * The Crm Associations to sync.
+     * This is used to associate the model with other CRM objects.
+     *
+     * @var array
+     */
+    public $syncModelCrmAssociateRules = [
+        [
+            'assocMethod'   => 'entity', // App\Models\Entity::class
+            'provider' => [
+                'hubspot' => [
+                    [
+                        'association_category' => HubSpotController::ASSOCIATION_CATEGORY__HUBSPOT_DEFINED,
+                        'association_type_id' => HubSpotController::ASSOCIATION_TYPE_ID__CONTACT_TO_COMPANY_PRIMARY,
+                    ],
+                    [
+                        'association_category' => HubSpotController::ASSOCIATION_CATEGORY__HUBSPOT_DEFINED,
+                        'association_type_id' => HubSpotController::ASSOCIATION_TYPE_ID__CONTACT_TO_COMPANY,
+                    ],
+                ],
+            ],
+        ],
+    ];
 }
 ```
 
@@ -87,15 +149,68 @@ Executing `(new CrmController())->setModel($user)->execute();`:
 1. Directly in a controller action.
 2. Via a Observer. e.g. inside a UserObserver to trigger after a save() event. (see below)
     ```PHP
-    /**
-     * Handle the User "saved" event.
-     *
-     */
-    public function saved(User $user): void
+    class UserObserver implements ShouldHandleEventsAfterCommit
     {
-        echo ('saved...');
-        (new CrmController())->setModel($user)->execute();
-        echo ('synced...');
+        /**
+        * Handle the User "created" event.
+        */
+        public function created(User $user): void
+        {
+            echo ('create...');
+            (new CrmController())->setModel($user)->execute(CrmController::EXEC_ACTION_CREATE);
+            echo ('created...');
+        }
+
+        /**
+        * Handle the User "updated" event.
+        */
+        public function updated(User $user): void
+        {
+            echo ('update...');
+            (new CrmController())
+                ->setModel($user)
+                ->execute(CrmController::EXEC_ACTION_UPDATE, true);
+            echo ('updated...');
+        }
+
+        /**
+        * Handle the User "deleted" event.
+        * Run when a user is soft-deleted.
+        */
+        public function deleted(User $user)
+        {
+            echo ('delete...');
+            (new CrmController())->setModel($user)->execute(CrmController::EXEC_ACTION_DELETE);
+            echo ('deleted...');
+        }
+
+        /**
+        * Handle the User "restored" event.
+        * Soft-delete has been reversed.
+        */
+        public function restored(User $user): void
+        {
+            echo ('restore...');
+            (new CrmController())->setModel($user)->execute(CrmController::EXEC_ACTION_RESTORE);
+            echo ('restored...');
+        }
+
+        /**
+        * Handle the User "force deleted" event.
+        */
+        public function forceDeleted(User $user): void
+        {
+            echo ('forceDeleted...');
+        }
+
+        /**
+        * Handle the User "saved" event.
+        *
+        */
+        public function saved(User $user): void
+        {
+            echo ('saving...');
+        }
     }
     ```
 3. Inside an event job. This is a good method to separate the logic from the save event and put the sync in a job queue to be processed shortly after the record has been saved.
