@@ -30,7 +30,7 @@ class CrmController extends BaseController
     public const EXEC_ACTION_RESTORE = 'restore';
 
     // multiple execute() actions
-    public const EXEC_ACTION_CREATE_UPDATE = 'create_update';
+    public const EXEC_ACTION_PATCH = 'patch'; // perform create or update based on the existence of the CRM record
 
     /**
      * The CRM provider environment/s to use (e.g. production, sandbox, etc.)
@@ -290,8 +290,9 @@ class CrmController extends BaseController
      * @param string|array|null $actionEnvironment This defines the environment to sync to (e.g. production, sandbox, etc.)
      * @param string|array|null $actionProvider This defines the CRM provider to sync to (e.g. hubspot, salesforce, etc.)
      * @return void
+     * @throws Exception
      */
-    public function execute($action = self::EXEC_ACTION_CREATE_UPDATE, $associate = false, $actionEnvironment = null, $actionProvider = null)
+    public function execute($action = self::EXEC_ACTION_PATCH, $associate = false, $actionEnvironment = null, $actionProvider = null)
     {
         $this->logger->infoMid('------------------------------------------');
         $this->logger->infoMid('----- Execute a new CRM Sync process -----');
@@ -303,6 +304,12 @@ class CrmController extends BaseController
         if (empty($this->model)) {
             $this->logger->errorMid('No model provided to sync.');
             throw new Exception('No model provided to sync.');
+        }
+
+        // check if we have the correct provided action
+        if (!$this->validateAction($action)) {
+            $this->logger->errorMid('Invalid action requested `' . $action . '`.');
+            throw new Exception('Incorrect execute action provided to sync.');
         }
 
         // check if we have property mappings to process
@@ -406,9 +413,9 @@ class CrmController extends BaseController
                 // load the crm data (if exists)
                 $crmObject->load($keyLookup->ext_object_id ?? null, $crmFilterData);
 
-                // define what action is requested (create, update, delete, restore, create_update)
+                // define what action is requested (create, update, delete, restore, patch)
                 switch ($action) {
-                    case self::EXEC_ACTION_CREATE_UPDATE:
+                    case self::EXEC_ACTION_PATCH:
                         // make sure that we only create if no object could be loaded
                         // important: model property `syncModelCrmPropertyMapping` should be defined
                         if ($crmObject->getCrmObjectItem() === null) {
@@ -686,6 +693,29 @@ class CrmController extends BaseController
         }
 
         // return true if we can process this provider
+        return true;
+    }
+
+    /**
+     * Validate the provided action
+     *
+     * @param mixed $action
+     * @return bool
+     */
+    private function validateAction($action)
+    {
+        // validate the provided action
+        if (!in_array($action, [
+            self::EXEC_ACTION_CREATE,
+            self::EXEC_ACTION_UPDATE,
+            self::EXEC_ACTION_DELETE,
+            self::EXEC_ACTION_RESTORE,
+            self::EXEC_ACTION_PATCH
+        ])) {
+            return false;
+        }
+
+        // return true if the action is valid
         return true;
     }
 }

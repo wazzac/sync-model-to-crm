@@ -127,12 +127,12 @@ class User extends Authenticatable
             'provider' => [
                 'hubspot' => [
                     [
-                        'association_category' => HubSpotController::ASSOCIATION_CATEGORY__HUBSPOT_DEFINED,
-                        'association_type_id' => HubSpotController::ASSOCIATION_TYPE_ID__CONTACT_TO_COMPANY_PRIMARY,
+                        'association_category' => \Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController::ASSOCIATION_CATEGORY__HUBSPOT_DEFINED,
+                        'association_type_id' => \Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController::ASSOCIATION_TYPE_ID__CONTACT_TO_COMPANY_PRIMARY,
                     ],
                     [
-                        'association_category' => HubSpotController::ASSOCIATION_CATEGORY__HUBSPOT_DEFINED,
-                        'association_type_id' => HubSpotController::ASSOCIATION_TYPE_ID__CONTACT_TO_COMPANY,
+                        'association_category' => \Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController::ASSOCIATION_CATEGORY__HUBSPOT_DEFINED,
+                        'association_type_id' => \Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController::ASSOCIATION_TYPE_ID__CONTACT_TO_COMPANY,
                     ],
                 ],
             ],
