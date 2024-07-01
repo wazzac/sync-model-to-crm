@@ -1,6 +1,6 @@
 {
     "name": "wazza/sync-model-to-crm",
-    "description": "Helper package to simplify Laravel Model (e.g. `User`, `Entity`, etc.) data synchronization to external CRM object (e.g. HubSpot `Contact`, `Company`, etc.)",
+    "description": "Helper package to simplify Laravel Model (e.g. `User`, `Entity`, etc.) data synchronization to external CRM object (e.g. HubSpot/Pipedrive `Contact`, `Company`, etc.)",
     "type": "library",
     "require": {
         "php": "^8.1",
