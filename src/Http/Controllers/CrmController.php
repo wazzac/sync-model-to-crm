@@ -29,8 +29,11 @@ class CrmController extends BaseController
     public const EXEC_ACTION_DELETE = 'delete';
     public const EXEC_ACTION_RESTORE = 'restore';
 
-    // multiple execute() actions
-    public const EXEC_ACTION_PATCH = 'patch'; // perform create or update based on the existence of the CRM record
+    // set attempt actions
+    private $attemptCreate = false;
+    private $attemptUpdate = false;
+    private $attemptDelete = false;
+    private $attemptRestore = false;
 
     /**
      * The CRM provider environment/s to use (e.g. production, sandbox, etc.)
@@ -117,15 +120,50 @@ class CrmController extends BaseController
      * Create a new CrmController instance and define the log identifier (blank will create a new one)
      *
      * @param string|null $logIdentifier
+     * @param array|string|null $actions - null/default to patch (insert or update)
      * @return void
      * @throws BindingResolutionException
      * @throws NotFoundExceptionInterface
      * @throws ContainerExceptionInterface
      */
-    public function __construct(string $logIdentifier = null)
+    public function __construct(string $logIdentifier = null, array|string|null $actions = null)
     {
         // parent constructor
         parent::__construct($logIdentifier);
+
+        // set all actions to false
+        $this->setAttemptAll(false);
+
+        // make sure actions is an array
+        if (empty($actions)) {
+            $actions = [self::EXEC_ACTION_CREATE, self::EXEC_ACTION_UPDATE];
+        }
+
+        // set defined actions as per the provided array
+        if (!is_array($actions)) {
+            $actions = [$actions];
+        }
+
+        // loop the actions and set the attempt actions
+        foreach ($actions as $action) {
+            switch ($action) {
+                case self::EXEC_ACTION_CREATE:
+                    $this->setAttemptCreate(true);
+                    break;
+                case self::EXEC_ACTION_UPDATE:
+                    $this->setAttemptUpdate(true);
+                    break;
+                case self::EXEC_ACTION_DELETE:
+                    $this->setAttemptDelete(true);
+                    break;
+                case self::EXEC_ACTION_RESTORE:
+                    $this->setAttemptRestore(true);
+                    break;
+                default:
+                    $this->logger->errorMid('Invalid action requested `' . $action . '`.');
+                    break;
+            }
+        }
 
         // anything else to do here?
         // ...
@@ -139,7 +177,7 @@ class CrmController extends BaseController
      * Set the environment for the CRM provider
      *
      * @param array|string|null $environment - default to config value
-     * @return CrmController
+     * @return $this
      */
     public function setEnvironment(array|string|null $environment = null)
     {
@@ -152,7 +190,7 @@ class CrmController extends BaseController
      * Set the property mapping for the CRM provider
      *
      * @param array $propertyMapping
-     * @return CrmController
+     * @return $this
      */
     public function setPropertyMapping(array $propertyMapping = [])
     {
@@ -170,7 +208,7 @@ class CrmController extends BaseController
      * Set the unique filters for the CRM provider
      *
      * @param array $uniqueFilters
-     * @return CrmController
+     * @return $this
      */
     public function setUniqueFilters(array $uniqueFilters = [])
     {
@@ -189,7 +227,7 @@ class CrmController extends BaseController
      * This Method will also set the default environment, property mapping and unique filters defined in the Model
      *
      * @param \Illuminate\Database\Eloquent\Model|null $model
-     * @return CrmController
+     * @return $this
      */
     public function setModel(Model $model = null)
     {
@@ -214,12 +252,92 @@ class CrmController extends BaseController
      * Set the Associated Models
      *
      * @var array $modelCrmAssociateRules
-     * @return CrmController
+     * @return $this
      */
     public function setAssociateRules(array $modelCrmAssociateRules = [])
     {
         $this->associateRules = $modelCrmAssociateRules ?? [];
         $this->logger->infoLow('Crm Associated Model Rules set as: `' . json_encode($this->associateRules) . '`');
+        return $this;
+    }
+
+    /**
+     * Set the attempt actions for `create`
+     *
+     * @param bool $attemptCreate
+     * @return $this
+     */
+    public function setAttemptCreate(bool $attemptCreate = true)
+    {
+        $this->attemptCreate = $attemptCreate;
+        $this->logger->infoLow('Set Attempt Create: ' . ($attemptCreate ? 'true' : 'false'));
+        return $this;
+    }
+
+    /**
+     * Set the attempt actions for `update`
+     *
+     * @param bool $attemptUpdate
+     * @return $this
+     */
+    public function setAttemptUpdate(bool $attemptUpdate = true)
+    {
+        $this->attemptUpdate = $attemptUpdate;
+        $this->logger->infoLow('Set Attempt Update: ' . ($attemptUpdate ? 'true' : 'false'));
+        return $this;
+    }
+
+    /**
+     * Set the attempt actions for `delete`
+     *
+     * @param bool $attemptDelete
+     * @return $this
+     */
+    public function setAttemptDelete(bool $attemptDelete = true)
+    {
+        $this->attemptDelete = $attemptDelete;
+        $this->logger->infoLow('Set Attempt Delete: ' . ($attemptDelete ? 'true' : 'false'));
+        return $this;
+    }
+
+    /**
+     * Set the attempt actions for `restore`
+     *
+     * @param bool $attemptRestore
+     * @return $this
+     */
+    public function setAttemptRestore(bool $attemptRestore = true)
+    {
+        $this->attemptRestore = $attemptRestore;
+        $this->logger->infoLow('Set Attempt Restore: ' . ($attemptRestore ? 'true' : 'false'));
+        return $this;
+    }
+
+    /**
+     * Set the attempt actions for `patch`
+     *
+     * @param bool $attemptPatch
+     * @return $this
+     */
+    public function setAttemptPatch(bool $attemptPatch = true)
+    {
+        $this->setAttemptCreate($attemptPatch);
+        $this->setAttemptUpdate($attemptPatch);
+        return $this;
+    }
+
+    /**
+     * Set the attempt actions for all actions
+     *
+     * @param bool $attemptAll
+     * @return $this
+     */
+    public function setAttemptAll(bool $attemptAll = true)
+    {
+        $this->setAttemptCreate($attemptAll);
+        $this->setAttemptUpdate($attemptAll);
+        $this->setAttemptDelete($attemptAll);
+        $this->setAttemptRestore($attemptAll);
         return $this;
     }
 
@@ -277,6 +395,86 @@ class CrmController extends BaseController
         return $this->associateRules;
     }
 
+    /**
+     * Get the attempt actions for `create`
+     *
+     * @return bool
+     */
+    public function shouldCreate()
+    {
+        return $this->attemptCreate;
+    }
+
+    /**
+     * Get the attempt actions for `update`
+     *
+     * @return bool
+     */
+    public function shouldUpdate()
+    {
+        return $this->attemptUpdate;
+    }
+
+    /**
+     * Get the attempt actions for `delete`
+     *
+     * @return bool
+     */
+    public function shouldDelete()
+    {
+        return $this->attemptDelete;
+    }
+
+    /**
+     * Get the attempt actions for `restore`
+     *
+     * @return bool
+     */
+    public function shouldRestore()
+    {
+        return $this->attemptRestore;
+    }
+
+    /**
+     * Get the attempt actions for `patch`
+     *
+     * @return bool
+     */
+    public function shouldPatch()
+    {
+        return $this->shouldCreate() && $this->shouldUpdate();
+    }
+
+    /**
+     * Get the attempt actions for all actions
+     *
+     * @return bool
+     */
+    public function shouldDoAll()
+    {
+        return $this->shouldCreate() && $this->shouldUpdate() && $this->shouldDelete() && $this->shouldRestore();
+    }
+
+    /**
+     * Get the attempt actions for any actions
+     *
+     * @return bool
+     */
+    public function shouldDoAny()
+    {
+        return $this->shouldCreate() || $this->shouldUpdate() || $this->shouldDelete() || $this->shouldRestore();
+    }
+
+    /**
+     * Get the attempt actions for no actions
+     *
+     * @return bool
+     */
+    public function shouldDoNone()
+    {
+        return !$this->shouldCreate() && !$this->shouldUpdate() && !$this->shouldDelete() && !$this->shouldRestore();
+    }
+
     // --------------------------------------------------------------
     // -- action methods
     // --------------------------------------------------------------
@@ -284,15 +482,13 @@ class CrmController extends BaseController
     /**
      * Execute the CRM sync process
      *
-     * @param \Illuminate\Database\Eloquent\Model $model The model to sync
-     * @param bool $processDelete This defines if the CRM record should be deleted/archived if the local record is deleted/archived
      * @param bool $associate Should associations be processed
      * @param string|array|null $actionEnvironment This defines the environment to sync to (e.g. production, sandbox, etc.)
      * @param string|array|null $actionProvider This defines the CRM provider to sync to (e.g. hubspot, salesforce, etc.)
      * @return void
      * @throws Exception
      */
-    public function execute($action = self::EXEC_ACTION_PATCH, $associate = false, $actionEnvironment = null, $actionProvider = null)
+    public function execute($associate = false, $actionEnvironment = null, $actionProvider = null)
     {
         $this->logger->infoMid('------------------------------------------');
         $this->logger->infoMid('----- Execute a new CRM Sync process -----');
@@ -306,10 +502,10 @@ class CrmController extends BaseController
             throw new Exception('No model provided to sync.');
         }
 
-        // check if we have the correct provided action
-        if (!$this->validateAction($action)) {
-            $this->logger->errorMid('Invalid action requested `' . $action . '`.');
-            throw new Exception('Incorrect execute action provided to sync.');
+        // make sure we have at least one action to process
+        if ($this->shouldDoNone()) {
+            $this->logger->errorMid('No action provided to sync.');
+            return;
         }
 
         // check if we have property mappings to process
@@ -413,65 +609,64 @@ class CrmController extends BaseController
                 // load the crm data (if exists)
                 $crmObject->load($keyLookup->ext_object_id ?? null, $crmFilterData);
 
-                // define what action is requested (create, update, delete, restore, patch)
-                switch ($action) {
-                    case self::EXEC_ACTION_PATCH:
-                        // make sure that we only create if no object could be loaded
-                        // important: model property `syncModelCrmPropertyMapping` should be defined
-                        if ($crmObject->getCrmObjectItem() === null) {
-                            // process insert
-                            $crmObject->logger->infoLow('CRM Object not found. Creating...');
-                            $crmObject->create();
-                        } else {
-                            // process update
-                            $crmObject->logger->infoLow('CRM Object found. Updating...');
-                            $crmObject->update();
-                        }
-                        break;
+                // define what action is requested (create, update, delete, restore)
+                // -- (1) Patch: create a new record in the CRM -------------------
+                if ($this->shouldPatch()) {
+                    // make sure that we only create if no object could be loaded
+                    // important: model property `syncModelCrmPropertyMapping` should be defined
+                    if ($crmObject->getCrmObjectItem() === null) {
+                        // process insert
+                        $crmObject->logger->infoLow('CRM Object not found. Creating...');
+                        $crmObject->create();
+                    } else {
+                        // process update
+                        $crmObject->logger->infoLow('CRM Object found. Updating...');
+                        $crmObject->update();
+                    }
+                }
 
-                    case self::EXEC_ACTION_CREATE:
-                        // make sure that we only create if no object could be loaded
-                        // important: model property `syncModelCrmPropertyMapping` should be defined
-                        if ($crmObject->getCrmObjectItem() === null) {
-                            // process insert
-                            $crmObject->logger->infoLow('CRM Object not found. Creating...');
-                            $crmObject->create();
-                        }
-                        break;
+                // -- (2) Create: create a new record in the CRM ------------------
+                if (!$this->shouldPatch() && $this->shouldCreate()) {
+                    // make sure that we only create if no object could be loaded
+                    // important: model property `syncModelCrmPropertyMapping` should be defined
+                    if ($crmObject->getCrmObjectItem() === null) {
+                        // process insert
+                        $crmObject->logger->infoLow('CRM Object not found. Creating...');
+                        $crmObject->create();
+                    }
+                }
 
-                    case self::EXEC_ACTION_UPDATE:
-                        // make sure that we only create if no object could be loaded
-                        // important: model property `syncModelCrmPropertyMapping` should be defined
-                        if ($crmObject->getCrmObjectItem() !== null) {
-                            // process update
-                            $crmObject->logger->infoLow('CRM Object found. Updating...');
-                            $crmObject->update();
-                        }
-                        break;
+                // -- (3) Update: update an existing record in the CRM -------------
+                if (!$this->shouldPatch() && $this->shouldUpdate()) {
+                    // make sure that we only create if no object could be loaded
+                    // important: model property `syncModelCrmPropertyMapping` should be defined
+                    if ($crmObject->getCrmObjectItem() !== null) {
+                        // process update
+                        $crmObject->logger->infoLow('CRM Object found. Updating...');
+                        $crmObject->update();
+                    }
+                }
 
-                    case self::EXEC_ACTION_DELETE:
-                        // make sure that we only create if no object could be loaded
-                        // important: model property `syncModelCrmDeleteRules` should be defined
-                        if ($crmObject->getCrmObjectItem() !== null) {
-                            // process delete
-                            $crmObject->logger->infoLow('CRM Object found. Deleting...');
-                            $crmObject->delete();
-                        }
-                        break;
+                // -- (4) Delete: delete an existing record in the CRM -------------
+                if ($this->shouldDelete()) {
+                    // make sure that we only create if no object could be loaded
+                    // important: model property `syncModelCrmDeleteRules` should be defined
+                    if ($crmObject->getCrmObjectItem() !== null) {
+                        // process delete
+                        $crmObject->logger->infoLow('CRM Object found. Deleting...');
+                        $crmObject->delete();
+                    }
+                }
 
-                    case self::EXEC_ACTION_RESTORE:
-                        // make sure that we only create if no object could be loaded
-                        // important: model property `syncModelCrmActiveRules` should be defined
-                        if ($crmObject->getCrmObjectItem() !== null) {
-                            // process restore
-                            $crmObject->logger->infoLow('CRM Object found. Restoring...');
-                            $crmObject->update();
-                        }
-                        break;
-
-                    default:
-                        $this->logger->errorMid('Invalid action requested `' . $action . '`.');
-                        break;
+                // -- (5) Restore: restore an existing record in the CRM -----------
+                if ($this->shouldRestore()) {
+                    // make sure that we only create if no object could be loaded
+                    // important: model property `syncModelCrmActiveRules` should be defined
+                    if ($crmObject->getCrmObjectItem() !== null) {
+                        // process restore
+                        $crmObject->logger->infoLow('CRM Object found. Restoring...');
+                        $crmObject->update();
+                    }
                 }
 
                 // if the $keyLookup result was empty, then create a new record in the object mapping table
@@ -693,29 +888,6 @@ class CrmController extends BaseController
         }
 
         // return true if we can process this provider
-        return true;
-    }
-
-    /**
-     * Validate the provided action
-     *
-     * @param mixed $action
-     * @return bool
-     */
-    private function validateAction($action)
-    {
-        // validate the provided action
-        if (!in_array($action, [
-            self::EXEC_ACTION_CREATE,
-            self::EXEC_ACTION_UPDATE,
-            self::EXEC_ACTION_DELETE,
-            self::EXEC_ACTION_RESTORE,
-            self::EXEC_ACTION_PATCH
-        ])) {
-            return false;
-        }
-
-        // return true if the action is valid
         return true;
     }
 }

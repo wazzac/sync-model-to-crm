@@ -9,13 +9,13 @@ trait crmTrait
 {
     /**
      *
-     * @param string $action Options: create, update, delete, restore & patch (create or update)
+     * @param string $action Options: array [create, update, delete, restore], or single string action (blank array will default to patch actions... aka insert/update)
      * @param bool $associations Options: true, false (process the associations of the related model)
      * @param string $provider Specific provider to action. `null` will follow the config or model setup guidelines.
      * @param string $environment Specific environment to action. `null` will follow the config or model setup guidelines.
      * @return void
      */
-    public function syncToCrm($action = 'create', $associations = true, $environment = null, $provider = null)
+    public function syncToCrm(array|string|null $actions = null, $associations = true, $environment = null, $provider = null)
     {
         /**
          * get the current model the trait is called from
@@ -24,9 +24,9 @@ trait crmTrait
         $model = get_class($this);
 
         // initiate a crm sync process
-        $crmSync = new CrmController();
+        $crmSync = new CrmController(null, $actions);
         $crmSync->setModel($model);
-        $crmSync->execute($action, $associations, $environment, $provider);
+        $crmSync->execute($associations, $environment, $provider);
     }
 
     /**
@@ -39,7 +39,7 @@ trait crmTrait
      */
     public function syncToCrmCreate($associations = true, $environment = null, $provider = null)
     {
-        $this->syncToCrm('create', $associations, $environment, $provider);
+        $this->syncToCrm(CrmController::EXEC_ACTION_CREATE, $associations, $environment, $provider);
     }
 
     /**
@@ -52,7 +52,7 @@ trait crmTrait
      */
     public function syncToCrmUpdate($associations = true, $environment = null, $provider = null)
     {
-        $this->syncToCrm('update', $associations, $environment, $provider);
+        $this->syncToCrm(CrmController::EXEC_ACTION_UPDATE, $associations, $environment, $provider);
     }
 
     /**
@@ -65,7 +65,7 @@ trait crmTrait
      */
     public function syncToCrmDelete($associations = true, $environment = null, $provider = null)
     {
-        $this->syncToCrm('delete', $associations, $environment, $provider);
+        $this->syncToCrm(CrmController::EXEC_ACTION_DELETE, $associations, $environment, $provider);
     }
 
     /**
@@ -78,7 +78,7 @@ trait crmTrait
      */
     public function syncToCrmRestore($associations = true, $environment = null, $provider = null)
     {
-        $this->syncToCrm('restore', $associations, $environment, $provider);
+        $this->syncToCrm(CrmController::EXEC_ACTION_RESTORE, $associations, $environment, $provider);
     }
 
     /**
@@ -91,6 +91,6 @@ trait crmTrait
      */
     public function syncToCrmPatch($associations = true, $environment = null, $provider = null)
     {
-        $this->syncToCrm('patch', $associations, $environment, $provider);
+        $this->syncToCrm([CrmController::EXEC_ACTION_CREATE, CrmController::EXEC_ACTION_UPDATE], $associations, $environment, $provider);
     }
 }
