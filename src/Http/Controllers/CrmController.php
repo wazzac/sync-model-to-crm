@@ -601,13 +601,18 @@ class CrmController extends BaseController
 
                 // set the filter actual values from the model data
                 $crmFilterData = [];
-                foreach ($crmFilters as $localProperty => $crmProperty) {
-                    $crmFilterData[$crmProperty] = $this->model->{$localProperty} ?? null;
+                if (!empty($crmFilters)) {
+                    foreach ($crmFilters as $localProperty => $crmProperty) {
+                        $crmFilterData[$crmProperty] = $this->model->{$localProperty} ?? null;
+                    }
                 }
                 $crmObject->logger->infoLow('Crm filter properties set as: ' . json_encode($crmFilterData));
 
+                // get the external object id
+                $extObjectId = $keyLookup->ext_object_id ?? null;
+
                 // load the crm data (if exists)
-                $crmObject->load($keyLookup->ext_object_id ?? null, $crmFilterData);
+                $crmObject->load($extObjectId, $crmFilterData);
 
                 // define what action is requested (create, update, delete, restore)
                 // -- (1) Patch: create a new record in the CRM -------------------
@@ -756,8 +761,10 @@ class CrmController extends BaseController
 
                             // set the filter actual values from the model data
                             $crmAssocFilterData = [];
-                            foreach ($crmAssocFilters as $localProperty => $crmProperty) {
-                                $crmAssocFilterData[$crmProperty] = $associatedModel->{$localProperty} ?? null;
+                            if (!empty($crmAssocFilters)) {
+                                foreach ($crmAssocFilters as $localProperty => $crmProperty) {
+                                    $crmAssocFilterData[$crmProperty] = $associatedModel->{$localProperty} ?? null;
+                                }
                             }
                             $crmAssocObject->logger->infoLow('Crm filter properties set as: ' . json_encode($crmAssocFilterData));
 
