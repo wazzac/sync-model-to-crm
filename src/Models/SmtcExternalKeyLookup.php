@@ -34,4 +34,53 @@ class SmtcExternalKeyLookup extends Model
         'ext_object_id',
         'ext_object_type'
     ];
+
+    /**
+     * Update the external key lookup table with the provided values
+     *
+     * @param string|null $objectId The local model primary key
+     * @param string|null $objectType The local model class name.
+     * @param string|null $crmProvider The CRM provider name. e.g. 'salesforce', 'hubspot', etc.
+     * @param string|null $crmEnvironment The CRM environment name. e.g. 'sandbox', 'production', etc.
+     * @param string|null $crmObjectType The CRM object type. e.g. 'contact', 'company', etc.
+     * @param string|null $crmObjectId The CRM object primary key. e.g. '1231258465'
+     * @return SmtcExternalKeyLookup
+     */
+    public static function updateKeyLookup(
+        string|null $objectId = null,
+        string|null $objectType = null,
+        string|null $crmProvider = null,
+        string|null $crmEnvironment = null,
+        string|null $crmObjectType = null,
+        string|null $crmObjectId = null
+    ) {
+        // look in the object mapping table to see if we can find the crm object primary key
+        $keyLookup = self::where('object_id', $objectId)
+            ->where('object_type', $objectType)
+            ->where('ext_provider', $crmProvider)
+            ->where('ext_environment', $crmEnvironment)
+            ->where('ext_object_type', $crmObjectType)
+            ->where('ext_object_id', $crmObjectId)
+            ->first();
+
+        // if we found a match, update the existing entry, otherwise create a new entry
+        if ($keyLookup) {
+            // update the existing entry
+            $keyLookup->ext_object_id = $crmObjectId;
+            $keyLookup->save();
+        } else {
+            // create a new entry
+            $keyLookup = new self();
+            $keyLookup->object_id = $objectId;
+            $keyLookup->object_type = $objectType;
+            $keyLookup->ext_provider = $crmProvider;
+            $keyLookup->ext_environment = $crmEnvironment;
+            $keyLookup->ext_object_id = $crmObjectId;
+            $keyLookup->ext_object_type = $crmObjectType;
+            $keyLookup->save();
+        }
+
+        // return the key lookup object
+        return $keyLookup;
+    }
 }
