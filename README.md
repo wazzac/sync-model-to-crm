@@ -425,4 +425,30 @@ You can track the transactions by running `tail -f {log path}` or even including
 
 ## Testing
 
-... more details to follow.
+Run the following command to execute tests:
+
+```bash
+./vendor/bin/pest
+```
+Output Example:
+
+```bash
+   PASS  Tests\Unit\EnvTest
+  ✓ it should have the correct environment variables set         1.11s
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ it contains a successful example unit test                   0.33s
+
+   PASS  Tests\Unit\ModelTest
+  ✓ it can create a new SmtcExternalKeyLookup model record       0.31s
+  ✓ it can mass assign data to the SmtcExternalKeyLookup model   0.25s
+  ✓ it can update the SmtcExternalKeyLookup model record         0.35s
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ it contains a successful example feature test                0.24s
+
+  Tests:    6 passed (25 assertions)
+  Duration: 3.84s
+```
+
+> Note: More test to follow in the next release.

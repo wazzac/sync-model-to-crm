@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.3/phpunit.xsd" bootstrap="vendor/autoload.php" colors="true">
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>./tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>./tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">./src</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="SYNC_MODEL_TO_CRM_HASH_SALT" value="Ey4cw2BHvi0HmGYjyqYr"/>
+        <env name="SYNC_MODEL_TO_CRM_HASH_ALGO" value="sha256"/>
+        <env name="SYNC_MODEL_TO_CRM_LOG_INDICATOR" value="sync-modeltocrm"/>
+        <env name="SYNC_MODEL_TO_CRM_LOG_LEVEL" value="3"/>
+        <env name="SYNC_MODEL_TO_CRM_PROVIDER" value="hubspot"/>
+        <env name="SYNC_MODEL_TO_CRM_ENVIRONMENT" value="sandbox"/>
+        <env name="SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_SANDBOX_URI" value="https://api.hubapi.com/crm/v4/"/>
+        <env name="SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_SANDBOX_TOKEN" value="xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+    </php>
+</phpunit>
