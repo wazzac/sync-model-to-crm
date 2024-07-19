@@ -14,7 +14,8 @@
         "orchestra/testbench": "~8",
         "mockery/mockery": "^1.2",
         "laravel/legacy-factories": "~1",
-        "pestphp/pest": "^2.34"
+        "pestphp/pest": "^2.34",
+        "pestphp/pest-plugin-laravel": "^2.4"
     },
     "license": "MIT",
     "autoload": {
@@ -26,7 +27,9 @@
     "autoload-dev": {
         "psr-4": {
             "Wazza\\SyncModelToCrm\\": "src/",
-            "Wazza\\SyncModelToCrm\\Tests\\": "tests/"
+            "Wazza\\SyncModelToCrm\\Tests\\": "tests/",
+            "Wazza\\SyncModelToCrm\\Database\\Factories\\": "database/factories/",
+            "Wazza\\SyncModelToCrm\\Database\\Seeders\\": "database/seeders/"
         }
     },
     "exstra": {

@@ -4,16 +4,16 @@ namespace Wazza\SyncModelToCrm\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Database\Factories\PhraseFactory;
+use Wazza\SyncModelToCrm\Database\Factories\SmtcExternalKeyLookupFactory;
 
 class SmtcExternalKeyLookup extends Model
 {
     use HasFactory;
 
-    //public static function newFactory()
-    //{
-    //    return PhraseFactory::new();
-    //}
+    public static function newFactory()
+    {
+        return SmtcExternalKeyLookupFactory::new();
+    }
 
     /**
      * The database table used by the model.
@@ -34,6 +34,25 @@ class SmtcExternalKeyLookup extends Model
         'ext_object_id',
         'ext_object_type'
     ];
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'object_id' => ['required', 'string', 'max:36'],
+            'object_type' => ['required', 'string', 'max:32'],
+            'ext_provider' => ['required', 'string', 'max:32'],
+            'ext_environment' => ['required', 'string', 'max:16'],
+            'ext_object_id' => ['required', 'string', 'max:36'],
+            'ext_object_type' => ['required', 'string', 'max:32'],
+            // unique combination of object_id, object_type, ext_provider, ext_environment, ext_object_id, ext_object_type
+            'unique_combination' => ['required', 'unique:smtc_external_key_lookup,object_id,object_type,ext_provider,ext_environment,ext_object_id,ext_object_type'],
+        ];
+    }
 
     /**
      * Update the external key lookup table with the provided values

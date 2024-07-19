@@ -12,6 +12,7 @@
 */
 
 // uses(Tests\TestCase::class)->in('Feature');
+uses(\Wazza\SyncModelToCrm\Tests\TestCase::class)->in('Unit', 'Feature');
 
 /*
 |--------------------------------------------------------------------------
