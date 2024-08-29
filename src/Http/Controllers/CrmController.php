@@ -488,7 +488,7 @@ class CrmController extends BaseController
      * @return void
      * @throws Exception
      */
-    public function execute($associate = false, $actionEnvironment = null, $actionProvider = null)
+    public function execute(bool $associate = false, string|array|null $actionEnvironment = null, string|array|null $actionProvider = null)
     {
         $this->logger->infoMid('------------------------------------------');
         $this->logger->infoMid('----- Execute a new CRM Sync process -----');
