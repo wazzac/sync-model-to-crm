@@ -11,6 +11,8 @@
     # pkgs.python311Packages.pip
     # pkgs.nodejs_20
     # pkgs.nodePackages.nodemon
+    pkgs.php82
+    pkgs.php82Packages.composer
   ];
 
   # Sets environment variables in the workspace
