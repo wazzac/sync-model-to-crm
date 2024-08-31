@@ -9,7 +9,7 @@
     # pkgs.go
     # pkgs.python311
     # pkgs.python311Packages.pip
-    # pkgs.nodejs_20
+    pkgs.nodejs_20
     # pkgs.nodePackages.nodemon
     pkgs.php82
     pkgs.php82Packages.composer
