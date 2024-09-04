@@ -170,7 +170,7 @@ class CrmController extends BaseController
     }
 
     // --------------------------------------------------------------
-    // -- setters
+    // -- setters ---------------------------------------------------
     // --------------------------------------------------------------
 
     /**
@@ -179,7 +179,7 @@ class CrmController extends BaseController
      * @param array|string|null $environment - default to config value
      * @return $this
      */
-    public function setEnvironment(array|string|null $environment = null)
+    public function setEnvironment(array|string|null $environment = null): self
     {
         $this->environment = $environment ?? config('sync_modeltocrm.api.environment');
         $this->logger->infoLow('Crm Environment: `' . (is_array($this->environment) ? json_encode($this->environment) : $this->environment) . '`');
@@ -192,7 +192,7 @@ class CrmController extends BaseController
      * @param array $propertyMapping
      * @return $this
      */
-    public function setPropertyMapping(array $propertyMapping = [])
+    public function setPropertyMapping(array $propertyMapping = []): self
     {
         // set the property mappings
         $this->propertyMapping = $propertyMapping;
@@ -210,7 +210,7 @@ class CrmController extends BaseController
      * @param array $uniqueFilters
      * @return $this
      */
-    public function setUniqueFilters(array $uniqueFilters = [])
+    public function setUniqueFilters(array $uniqueFilters = []): self
     {
         // set the unique filters
         $this->uniqueFilters = $uniqueFilters;
@@ -342,7 +342,7 @@ class CrmController extends BaseController
     }
 
     // --------------------------------------------------------------
-    // -- getters
+    // -- getters ---------------------------------------------------
     // --------------------------------------------------------------
 
     /**
@@ -390,7 +390,7 @@ class CrmController extends BaseController
      *
      * @return array
      */
-    public function getAssociateRules()
+    public function getAssociateRules(): array
     {
         return $this->associateRules;
     }
@@ -400,7 +400,7 @@ class CrmController extends BaseController
      *
      * @return bool
      */
-    public function shouldCreate()
+    public function shouldCreate(): bool
     {
         return $this->attemptCreate;
     }
@@ -410,7 +410,7 @@ class CrmController extends BaseController
      *
      * @return bool
      */
-    public function shouldUpdate()
+    public function shouldUpdate(): bool
     {
         return $this->attemptUpdate;
     }
@@ -420,7 +420,7 @@ class CrmController extends BaseController
      *
      * @return bool
      */
-    public function shouldDelete()
+    public function shouldDelete(): bool
     {
         return $this->attemptDelete;
     }
@@ -430,7 +430,7 @@ class CrmController extends BaseController
      *
      * @return bool
      */
-    public function shouldRestore()
+    public function shouldRestore(): bool
     {
         return $this->attemptRestore;
     }
@@ -440,7 +440,7 @@ class CrmController extends BaseController
      *
      * @return bool
      */
-    public function shouldPatch()
+    public function shouldPatch(): bool
     {
         return $this->shouldCreate() && $this->shouldUpdate();
     }
@@ -450,7 +450,7 @@ class CrmController extends BaseController
      *
      * @return bool
      */
-    public function shouldDoAll()
+    public function shouldDoAll(): bool
     {
         return $this->shouldCreate() && $this->shouldUpdate() && $this->shouldDelete() && $this->shouldRestore();
     }
@@ -460,7 +460,7 @@ class CrmController extends BaseController
      *
      * @return bool
      */
-    public function shouldDoAny()
+    public function shouldDoAny(): bool
     {
         return $this->shouldCreate() || $this->shouldUpdate() || $this->shouldDelete() || $this->shouldRestore();
     }
@@ -470,13 +470,13 @@ class CrmController extends BaseController
      *
      * @return bool
      */
-    public function shouldDoNone()
+    public function shouldDoNone(): bool
     {
         return !$this->shouldCreate() && !$this->shouldUpdate() && !$this->shouldDelete() && !$this->shouldRestore();
     }
 
     // --------------------------------------------------------------
-    // -- action methods
+    // -- action methods --------------------------------------------
     // --------------------------------------------------------------
 
     /**
@@ -488,7 +488,7 @@ class CrmController extends BaseController
      * @return void
      * @throws Exception
      */
-    public function execute(bool $associate = false, string|array|null $actionEnvironment = null, string|array|null $actionProvider = null)
+    public function execute(bool $associate = false, string|array|null $actionEnvironment = null, string|array|null $actionProvider = null): void
     {
         $this->logger->infoMid('------------------------------------------');
         $this->logger->infoMid('----- Execute a new CRM Sync process -----');
@@ -824,6 +824,8 @@ class CrmController extends BaseController
                 $crmObject->disconnect();
                 unset($crmObject);
             }
+
+            // done with this environment, next...
         }
 
         // done
@@ -831,7 +833,7 @@ class CrmController extends BaseController
     }
 
     // --------------------------------------------------------------
-    // -- checks
+    // -- checks ----------------------------------------------------
     // --------------------------------------------------------------
 
     /**
@@ -842,7 +844,7 @@ class CrmController extends BaseController
      * @return bool
      * @throws Exception
      */
-    private function processEnvironment(string $currentEnvironment = null, array|string|null $requestedEnvironment = null)
+    private function processEnvironment(string $currentEnvironment = null, array|string|null $requestedEnvironment = null): bool
     {
         // make sure we have a current environment
         if (empty($currentEnvironment)) {
@@ -854,7 +856,7 @@ class CrmController extends BaseController
         if (
             !empty($requestedEnvironment) &&
             (
-                (is_array($requestedEnvironment) && !in_array($currentEnvironment, $actionEnvironment)) ||
+                (is_array($requestedEnvironment) && !in_array($currentEnvironment, $requestedEnvironment)) ||
                 $requestedEnvironment !== $currentEnvironment
             )
         ) {
@@ -874,7 +876,7 @@ class CrmController extends BaseController
      * @return bool
      * @throws Exception
      */
-    private function processProvider(string $currentProvider, array|string|null $requestedProvider = null)
+    private function processProvider(string $currentProvider, array|string|null $requestedProvider = null): bool
     {
         // make sure we have a current provider
         if (empty($currentProvider)) {
