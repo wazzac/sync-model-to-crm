@@ -56,7 +56,7 @@ trait crmTrait
         bool $associations = true,
         string|array|null $environment = null,
         string|array|null $provider = null
-    ) {
+    ): void {
         $this->syncToCrm(CrmController::EXEC_ACTION_CREATE, $associations, $environment, $provider);
     }
 
@@ -72,7 +72,7 @@ trait crmTrait
         bool $associations = true,
         string|array|null $environment = null,
         string|array|null $provider = null
-    ) {
+    ): void {
         $this->syncToCrm(CrmController::EXEC_ACTION_UPDATE, $associations, $environment, $provider);
     }
 
@@ -88,7 +88,7 @@ trait crmTrait
         bool $associations = true,
         string|array|null $environment = null,
         string|array|null $provider = null
-    ) {
+    ): void {
         $this->syncToCrm(CrmController::EXEC_ACTION_DELETE, $associations, $environment, $provider);
     }
 
@@ -104,7 +104,7 @@ trait crmTrait
         bool $associations = true,
         string|array|null $environment = null,
         string|array|null $provider = null
-    ) {
+    ): void {
         $this->syncToCrm(CrmController::EXEC_ACTION_RESTORE, $associations, $environment, $provider);
     }
 
@@ -120,7 +120,7 @@ trait crmTrait
         bool $associations = true,
         string|array|null $environment = null,
         string|array|null $provider = null
-    ) {
+    ): void {
         $this->syncToCrm([CrmController::EXEC_ACTION_CREATE, CrmController::EXEC_ACTION_UPDATE], $associations, $environment, $provider);
     }
 }
