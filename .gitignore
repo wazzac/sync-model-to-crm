@@ -1,3 +1,13 @@
-/vendor
-/.vscode
-/.idx
+# Node.js
+node_modules/
+.npm/
+.yarn/
+
+# Editor-specific
+/.vscode/
+
+# Generated files
+.idx/
+
+# Composer
+vendor/
