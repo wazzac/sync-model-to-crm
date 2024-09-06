@@ -614,6 +614,9 @@ class CrmController extends BaseController
                 // load the crm data (if exists)
                 $crmObject->load($extObjectId, $crmFilterData);
 
+                // record processed
+                $recordProcessed = false;
+
                 // define what action is requested (create, update, delete, restore)
                 // -- (1) Patch: create a new record in the CRM -------------------
                 if ($this->shouldPatch()) {
@@ -628,49 +631,59 @@ class CrmController extends BaseController
                         $crmObject->logger->infoLow('CRM Object found. Updating...');
                         $crmObject->update();
                     }
+                    // set the record processed flag
+                    $recordProcessed = true; // do not attempt to process it again
                 }
 
                 // -- (2) Create: create a new record in the CRM ------------------
-                if (!$this->shouldPatch() && $this->shouldCreate()) {
+                if (!$this->shouldPatch() && $this->shouldCreate() && !$recordProcessed) {
                     // make sure that we only create if no object could be loaded
                     // important: model property `syncModelCrmPropertyMapping` should be defined
                     if ($crmObject->getCrmObjectItem() === null) {
                         // process insert
                         $crmObject->logger->infoLow('CRM Object not found. Creating...');
                         $crmObject->create();
+                        // set the record processed flag
+                        $recordProcessed = true; // do not attempt to process it again
                     }
                 }
 
                 // -- (3) Update: update an existing record in the CRM -------------
-                if (!$this->shouldPatch() && $this->shouldUpdate()) {
+                if (!$this->shouldPatch() && $this->shouldUpdate() && !$recordProcessed) {
                     // make sure that we only create if no object could be loaded
                     // important: model property `syncModelCrmPropertyMapping` should be defined
                     if ($crmObject->getCrmObjectItem() !== null) {
                         // process update
                         $crmObject->logger->infoLow('CRM Object found. Updating...');
                         $crmObject->update();
+                        // set the record processed flag
+                        $recordProcessed = true; // do not attempt to process it again
                     }
                 }
 
                 // -- (4) Delete: delete an existing record in the CRM -------------
-                if ($this->shouldDelete()) {
+                if ($this->shouldDelete() && $this->model->trashed() && !$recordProcessed) {
                     // make sure that we only create if no object could be loaded
                     // important: model property `syncModelCrmDeleteRules` should be defined
                     if ($crmObject->getCrmObjectItem() !== null) {
                         // process delete
                         $crmObject->logger->infoLow('CRM Object found. Deleting...');
                         $crmObject->delete();
+                        // set the record processed flag
+                        $recordProcessed = true; // do not attempt to process it again
                     }
                 }
 
                 // -- (5) Restore: restore an existing record in the CRM -----------
-                if ($this->shouldRestore()) {
+                if ($this->shouldRestore() && !$this->model->trashed() && !$recordProcessed) {
                     // make sure that we only create if no object could be loaded
                     // important: model property `syncModelCrmActiveRules` should be defined
                     if ($crmObject->getCrmObjectItem() !== null) {
                         // process restore
                         $crmObject->logger->infoLow('CRM Object found. Restoring...');
                         $crmObject->update();
+                        // set the record processed flag
+                        $recordProcessed = true; // do not attempt to process it again
                     }
                 }
 
@@ -739,7 +752,7 @@ class CrmController extends BaseController
                             ->first();
 
                         // if we have no internal mapping for the associated object, then we need to create it
-                        if (empty($assocKeyLookup)) {
+                        if (empty($assocKeyLookup) || (!empty($assocKeyLookup) && empty($assocKeyLookup->ext_object_id))) {
                             $crmObject->logger->infoLow('No associated object key lookup found for `' . $associatedObject . '`. Creating...');
 
                             /**
@@ -772,33 +785,35 @@ class CrmController extends BaseController
                             $crmAssocObject->load(null, $crmAssocFilterData);
 
                             // for this we only create
-                            if ($crmAssocObject->getCrmObjectItem() === null) {
+                            $crmAssocRecord = $crmAssocObject->getCrmObjectItem(); // null on not located
+                            $crmAssocInserted = false;
+                            if (empty($crmAssocRecord)) {
                                 // process insert
                                 $crmAssocObject->logger->infoLow('CRM Object not found. Creating...');
                                 $crmAssocObject->create();
-                                $crmAssocObject->logger->infoLow('CRM Object created. `' . ($crmAssocObject->getCrmObjectItem()['id'] ?? 'err_no_id') . '`.');
+                                $crmAssocInserted = true;
+                                $crmAssocRecord = $crmAssocObject->getCrmObjectItem();
                             } else {
                                 // process update
                                 $crmAssocObject->logger->infoLow('CRM Object found. Updating...');
                                 $crmAssocObject->update();
-                                $crmAssocObject->logger->infoLow('CRM Object updated. `' . ($crmAssocObject->getCrmObjectItem()['id'] ?? 'err_no_id') . '`.');
                             }
 
-                            // if the $keyLookup result was empty, then create a new record in the object mapping table
-                            $crmAssocRecord = $crmAssocObject->getCrmObjectItem();
-                            if (isset($crmAssocRecord['id']) && !empty($crmAssocRecord['id'])) {
-                                // create a new record in the object mapping table
+                            $crmAssocObject->logger->infoLow('CRM Object ' . ($crmAssocInserted ? 'inserted' : 'updated') . '. id: `' . ($crmAssocRecord['id'] ?? 'err_no_id') . '`.');
+
+                            // create a new record in the object mapping table
+                            if (empty($assocKeyLookup)) {
                                 $assocKeyLookup = new SmtcExternalKeyLookup();
                                 $assocKeyLookup->object_id       = $associatedModel->id;
                                 $assocKeyLookup->object_type     = $associatedModel->getTable();
                                 $assocKeyLookup->ext_provider    = $provider;
                                 $assocKeyLookup->ext_environment = $environment;
                                 $assocKeyLookup->ext_object_type = $associatedObject;
-                                $assocKeyLookup->ext_object_id   = $crmAssocRecord['id'];
-                                $assocKeyLookup->save();
-                                // log it...
-                                $crmAssocObject->logger->infoLow('CRM Object Key Lookup created. `' . $keyLookup->object_id . '` to `' . $keyLookup->ext_object_id . '`');
                             }
+                            $assocKeyLookup->ext_object_id = $crmAssocRecord['id'] ?? null;
+                            $assocKeyLookup->save();
+                            // log it...
+                            $crmAssocObject->logger->infoLow('CRM Object Key Lookup created. `' . $assocKeyLookup->object_id . '` to `' . $assocKeyLookup->ext_object_id . '`');
 
                             // -- cleanup, onto next provider
                             $crmAssocObject->disconnect();
@@ -809,7 +824,7 @@ class CrmController extends BaseController
 
                         // as a final check, make sure we have an $assocKeyLookup->ext_object_id set
                         if (empty($assocKeyLookup->ext_object_id ?? null)) {
-                            $crmObject->logger->errorMid('No associated object key lookup found for `' . $associatedObject . '`.');
+                            $crmObject->logger->errorMid('No associated object key lookup found for `' . $associatedObject . '`. We will not be able to associate the objects.');
                             continue;
                         }
 

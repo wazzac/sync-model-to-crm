@@ -171,7 +171,7 @@ class HubSpotController implements CrmControllerInterface
     private $crmObject;
 
     /**
-     * The HubSpot CRM object item
+     * The HubSpot CRM object item (the actual record)
      * @var ModelInterface
      */
     private $crmObjectItem;
@@ -504,6 +504,8 @@ class HubSpotController implements CrmControllerInterface
                 throw new Exception('HubSpot object type (' . ($this->crmObjectType ?? 'NA') . ') not supported.');
         }
 
+        // set the object item again
+        $this->crmObjectItem = $this->crmObject['results'][0] ?? null;
         $this->logger->infoLow('Record created.');
 
         // all seems good
@@ -737,16 +739,17 @@ class HubSpotController implements CrmControllerInterface
                 );
 
             // ------------------------------
-            // loop through the current associations defined in $currentAssociations and compare with the $associationSpec; any missing associations will be created and any extra associations will be removed
+            // loop through the current associations defined in $currentAssociations and compare with the $associationSpec;
+            // any missing associations will be created and any extra associations will be removed
             // check if the association exists in the current associations
             $assocExists = false;
-            $nonExistingObjectIds = [];
+            $nonExistingObjectIds = []; // association ids that whe should delete
 
-            // only action if we have associated objects
+            // (1) only action if we have associated objects
             if (!empty($currentAssociations['results'])) {
                 // loop through the current associations
                 foreach ($currentAssociations['results'] as $currentAssoc) {
-                    // check if one of the associations match the the current object id
+                    // check if one of the associations match the current object id
                     if ($currentAssoc['to_object_id'] == $toObjectId) {
                         // yes it does exists...
                         $assocExists = true;
@@ -759,7 +762,8 @@ class HubSpotController implements CrmControllerInterface
                             $assocExists = false;
                             $this->logger->infoLow('The association specs does NOT match. Marked the associations for replacement...', [], $toObjectType);
                         } else {
-                            $this->logger->infoLow('The association specs match. Object ID: ' . $toObjectId . '; Type: ' . $toObjectType . '; Association Spec: ' . json_encode($associationSpec), [], $toObjectType);
+                            $this->logger->infoLow('The association specs match.', [], $toObjectType);
+                            $this->logger->infoLow('...matching info: Object ID: ' . $toObjectId . '; Type: ' . $toObjectType . '; Association Spec: ' . json_encode($associationSpec), [], $toObjectType);
                         }
 
                         // all good, continue to next record
@@ -771,7 +775,7 @@ class HubSpotController implements CrmControllerInterface
                 }
             }
 
-            // delete all associations between two records
+            // (2) delete all associations between two records
             if (!empty($nonExistingObjectIds)) {
                 foreach ($nonExistingObjectIds as $nonExistingObjectId) {
                     $this->client->crm()->associations()->v4()->basicApi()->archive(
@@ -786,7 +790,7 @@ class HubSpotController implements CrmControllerInterface
                 $this->logger->infoLow('No associations to delete.', [], $toObjectType);
             }
 
-            // create the association if it does not exist
+            // (3) create the association if it does not exist
             if (!$assocExists) {
                 // loop the association specs and create the association
                 $postSpec = [];
