@@ -6,17 +6,20 @@
 
 # Synchronize a Model to a Remote CRM Object
 
-A library that will syncronise any defined database table properties (inside the Model) to an external CRM provider, like [HubSpot](https://www.hubspot.com/), [Pipedrive](https://www.pipedrive.com/en) and more.
+A library that will syncronise any defined database table properties/associations (inside the Model) to an external CRM provider, like [HubSpot](https://www.hubspot.com/), [Pipedrive](https://www.pipedrive.com/en) and more.
 
-### Current Support: 
-- HubSpot: 
+<strong>Steps:</strong>
+Add a few property configurations to your Laravel Models, configure sync trigger via Observers or Model Mutators and monitor the logs to see how your data is automatically syncronised with a HubSpot object (like customer). You can also trigger the sync process via an event job.
+
+### Current Support:
+- HubSpot:
     - Local `User` syncronization with the `Contact` object.
     - Local `Entity` syncronization with the `Company` object.
     - Associations between `Contact` and `Company` records.
-    - Coming... `Deal` & `Ticket` objects.
-- Future Support: 
-    - Pipedrive 
-    - Salesforce  
+    - Coming soon... `Deal` & `Ticket` objects.
+- Future Support:
+    - Pipedrive
+    - Salesforce
     - ZohoCrm
     - etc.
 
