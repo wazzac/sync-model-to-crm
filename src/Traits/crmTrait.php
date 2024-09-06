@@ -4,19 +4,34 @@ namespace Wazza\SyncModelToCrm\Traits;
 
 use Wazza\SyncModelToCrm\Http\Controllers\CrmController;
 
-
+/**
+ * Include the below trait in your model to enable CRM sync functionality.
+ *
+ * public function save(array $options = [])
+ * {
+ *     parent::save($options);
+ *     // lets call the syncModelToCrm method to sync the model to the CRM.
+ *     // refer to the trait for all the available methods
+ *     $this->syncToCrmPatch(); -- don't use this method if you are using observers
+ * }
+ */
 trait crmTrait
 {
     /**
+     * Initiate a `Sync Model to CRM` process
      *
-     * @param string $action Options: array [create, update, delete, restore], or single string action (blank array will default to patch actions... aka insert/update)
+     * @param string|array|null $action Options: array [create, update, delete, restore], or single string action (blank array will default to patch actions... aka insert/update)
      * @param bool $associations Options: true, false (process the associations of the related model)
-     * @param string $provider Specific provider to action. `null` will follow the config or model setup guidelines.
-     * @param string $environment Specific environment to action. `null` will follow the config or model setup guidelines.
+     * @param string|array|null $environment Specific environment to action. `null` will follow the config or model setup guidelines.
+     * @param string|array|null $provider Specific provider to action. `null` will follow the config or model setup guidelines.
      * @return void
      */
-    public function syncToCrm(array|string|null $actions = null, $associations = true, $environment = null, $provider = null)
-    {
+    public function syncToCrm(
+        array|string|null $actions = null,
+        bool $associations = true,
+        string|array|null $environment = null,
+        string|array|null $provider = null
+    ): void {
         /**
          * get the current model the trait is called from
          * @var \Illuminate\Database\Eloquent\Model|null $model
@@ -33,12 +48,15 @@ trait crmTrait
      * Sync the model to the CRM on create
      *
      * @param bool $associations
-     * @param mixed $environment
-     * @param mixed $provider
+     * @param string|array|null $environment
+     * @param string|array|null $provider
      * @return void
      */
-    public function syncToCrmCreate($associations = true, $environment = null, $provider = null)
-    {
+    public function syncToCrmCreate(
+        bool $associations = true,
+        string|array|null $environment = null,
+        string|array|null $provider = null
+    ): void {
         $this->syncToCrm(CrmController::EXEC_ACTION_CREATE, $associations, $environment, $provider);
     }
 
@@ -46,12 +64,15 @@ trait crmTrait
      * Sync the model to the CRM on update
      *
      * @param bool $associations
-     * @param mixed $environment
-     * @param mixed $provider
+     * @param string|array|null $environment
+     * @param string|array|null $provider
      * @return void
      */
-    public function syncToCrmUpdate($associations = true, $environment = null, $provider = null)
-    {
+    public function syncToCrmUpdate(
+        bool $associations = true,
+        string|array|null $environment = null,
+        string|array|null $provider = null
+    ): void {
         $this->syncToCrm(CrmController::EXEC_ACTION_UPDATE, $associations, $environment, $provider);
     }
 
@@ -59,12 +80,15 @@ trait crmTrait
      * Sync the model to the CRM on delete
      *
      * @param bool $associations
-     * @param mixed $environment
-     * @param mixed $provider
+     * @param string|array|null $environment
+     * @param string|array|null $provider
      * @return void
      */
-    public function syncToCrmDelete($associations = true, $environment = null, $provider = null)
-    {
+    public function syncToCrmDelete(
+        bool $associations = true,
+        string|array|null $environment = null,
+        string|array|null $provider = null
+    ): void {
         $this->syncToCrm(CrmController::EXEC_ACTION_DELETE, $associations, $environment, $provider);
     }
 
@@ -72,12 +96,15 @@ trait crmTrait
      * Sync the model to the CRM on restore
      *
      * @param bool $associations
-     * @param mixed $environment
-     * @param mixed $provider
+     * @param string|array|null $environment
+     * @param string|array|null $provider
      * @return void
      */
-    public function syncToCrmRestore($associations = true, $environment = null, $provider = null)
-    {
+    public function syncToCrmRestore(
+        bool $associations = true,
+        string|array|null $environment = null,
+        string|array|null $provider = null
+    ): void {
         $this->syncToCrm(CrmController::EXEC_ACTION_RESTORE, $associations, $environment, $provider);
     }
 
@@ -85,12 +112,15 @@ trait crmTrait
      * Sync the model to the CRM on patch
      *
      * @param bool $associations
-     * @param mixed $environment
-     * @param mixed $provider
+     * @param string|array|null $environment
+     * @param string|array|null $provider
      * @return void
      */
-    public function syncToCrmPatch($associations = true, $environment = null, $provider = null)
-    {
+    public function syncToCrmPatch(
+        bool $associations = true,
+        string|array|null $environment = null,
+        string|array|null $provider = null
+    ): void {
         $this->syncToCrm([CrmController::EXEC_ACTION_CREATE, CrmController::EXEC_ACTION_UPDATE], $associations, $environment, $provider);
     }
 }

@@ -1,6 +1,10 @@
 # Release Notes
+
+## v0.4.0-beta `2024-08-28`
+> Beta Release. 🥳 Although only supporting `User` (Contact) and `Entity` (Company) synchronization for now, it's should be working as intended.
+
 ## v0.3.0-alpha `2024-07-19`
-> Moving closer to Beta release. The aim for this release is to complete all unit testing and finilise a few loose ends.
+> Moving closer to Beta release. The aim for this release is to complete all unit testing and finalize a few loose ends.
 
 ### Added
 - `CODE_OF_CONDUCT.md` file.

@@ -4,9 +4,24 @@
 <a href="https://github.com/wazzac/sync-model-to-crm/blob/main/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/wazzac/sync-model-to-crm"></a>
 </p>
 
-# Synchronize a Model to a Remote Crm Object
+# Synchronize a Model to a Remote CRM Object
 
-A library that will syncronise any defined database table properties (inside the Model) to an external Crm provider, like [HubSpot](https://www.hubspot.com/), [Pipedrive](https://www.pipedrive.com/en) and more.
+A library that will syncronise any defined database table properties/associations (inside the Model) to an external CRM provider, like [HubSpot](https://www.hubspot.com/), [Pipedrive](https://www.pipedrive.com/en) and more.
+
+<strong>Steps:</strong>
+Add a few property configurations to your Laravel Models, configure sync trigger via Observers or Model Mutators and monitor the logs to see how your data is automatically syncronised with a HubSpot object (like customer). You can also trigger the sync process via an event job.
+
+### Current Support:
+- HubSpot:
+    - Local `User` syncronization with the `Contact` object.
+    - Local `Entity` syncronization with the `Company` object.
+    - Associations between `Contact` and `Company` records.
+    - Coming soon... `Deal` & `Ticket` objects.
+- Future Support:
+    - Pipedrive
+    - Salesforce
+    - ZohoCrm
+    - etc.
 
 ## Overview
 
@@ -32,7 +47,7 @@ Looking at the below example:
 2. It will only syncronize the `name` and `email` properties to the HubSpot corresponding `firstname` and `email` fields _($syncModelCrmPropertyMapping)_.
 3. When there are no internal mapping yet stored, the CRM record will be uniquely loaded using the `email` property _($syncModelCrmUniqueSearch)_.
 4. In order for the script to know which remote CRM object relates to the User model, `contact` _($syncModelCrmRelatedObject)_ have to be defined as the remote item.
-5. The _($syncModelCrmDeleteRules)_ property is used to instruct the Crm what action to take when a local record is deleted/removed. For example, when _SoftDeletes_ are enabled locally, the crm will use the `soft_delete` rules to update the crm records or alternatively Archive the record in the crm.
+5. The _($syncModelCrmDeleteRules)_ property is used to instruct the CRM what action to take when a local record is deleted/removed. For example, when _SoftDeletes_ are enabled locally, the crm will use the `soft_delete` rules to update the crm records or alternatively Archive the record in the crm.
 6. The reverse to the above, _($syncModelCrmActiveRules)_ will be used to define the action that will be taken when deleted records are activated again.
 7. Finally, the non-required _($syncModelCrmAssociateRules)_ property is used to define the relationship (associations) between objects. e.g. `user` to `entity`.
 
@@ -150,7 +165,7 @@ class User extends Authenticatable
     public $syncModelCrmRelatedObject = 'contact';
 
     /**
-     * The Crm Delete rules to follow.
+     * The CRM Delete rules to follow.
      * i.e. if Soft-delete is applicable, what should the CRM record be updated to?
      * if Hard-delete is used, the record will be deleted/archived in the CRM.
      *
@@ -169,7 +184,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * The Crm Active/Restore rules to follow.
+     * The CRM Active/Restore rules to follow.
      * These will be the rules to follow for any new entries that are not soft-deleted.
      *
      * @var array
@@ -182,7 +197,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * The Crm Associations to sync.
+     * The CRM Associations to sync.
      * This is used to associate the model with other CRM objects.
      *
      * @var array

@@ -2,7 +2,6 @@
 
 namespace Wazza\SyncModelToCrm\Http\Controllers\CrmProviders;
 
-use Wazza\SyncModelToCrm\Models\SmtcExternalKeyLookup;
 use Wazza\SyncModelToCrm\Http\Contracts\CrmControllerInterface;
 use Wazza\SyncModelToCrm\Http\Controllers\Logger\LogController;
 
@@ -172,7 +171,7 @@ class HubSpotController implements CrmControllerInterface
     private $crmObject;
 
     /**
-     * The HubSpot CRM object item
+     * The HubSpot CRM object item (the actual record)
      * @var ModelInterface
      */
     private $crmObjectItem;
@@ -185,7 +184,7 @@ class HubSpotController implements CrmControllerInterface
      * @return self
      * @throws Exception
      */
-    public function connect(?string $environment = 'sandbox', ?string $logIdentifier = null)
+    public function connect(?string $environment = 'sandbox', ?string $logIdentifier = null): self
     {
         // --------------------------------------------------------------
         // set the logger instance
@@ -216,7 +215,7 @@ class HubSpotController implements CrmControllerInterface
      *
      * @return void
      */
-    public function disconnect()
+    public function disconnect(): void
     {
         $this->client = null;
         $this->logger->infoLow('Client disconnected.');
@@ -227,7 +226,7 @@ class HubSpotController implements CrmControllerInterface
      *
      * @return bool
      */
-    public function connected()
+    public function connected(): bool
     {
         return !is_null($this->client);
     }
@@ -239,7 +238,7 @@ class HubSpotController implements CrmControllerInterface
      * @param array $mapping
      * @return self
      */
-    public function setup(Model $model, array $mapping)
+    public function setup(Model $model, array $mapping): self
     {
         // --------------------------------------------------------------
         // check if the model is set
@@ -290,8 +289,8 @@ class HubSpotController implements CrmControllerInterface
      * Get the HubSpot CRM object (contains multiple crm records)
      * format: [
      *  'total' => 0,
-     * 'results' => [],
-     * 'paging' => []
+     *  'results' => [],
+     *  'paging' => []
      * ]
      *
      * @return ModelInterface|null
@@ -314,11 +313,11 @@ class HubSpotController implements CrmControllerInterface
     /**
      * Load data from the HubSpot API
      *
-     *  @param string|null $crmObjectPrimaryKey Best case, the key lookup object primary key (when already mapped)
+     * @param string|null $crmObjectPrimaryKey Best case, the key lookup object primary key (when already mapped)
      * @param array $searchFilters The filters to apply to find the specific crm object
      * @return self
      */
-    public function load(string|null $crmObjectPrimaryKey = null, array $searchFilters = [])
+    public function load(string|null $crmObjectPrimaryKey = null, array $searchFilters = []): self
     {
         $this->logger->infoMid('Loading the CRM object with Primary Key: `' . ($crmObjectPrimaryKey ?? 'not set yet') . '` and Filters: `' . json_encode($searchFilters) . '`');
 
@@ -446,9 +445,9 @@ class HubSpotController implements CrmControllerInterface
     /**
      * Create a new record in the HubSpot API
      *
-     * @return $this
+     * @return self
      */
-    public function create()
+    public function create(): self
     {
         $this->logger->infoMid('Create new record...');
 
@@ -505,6 +504,8 @@ class HubSpotController implements CrmControllerInterface
                 throw new Exception('HubSpot object type (' . ($this->crmObjectType ?? 'NA') . ') not supported.');
         }
 
+        // set the object item again
+        $this->crmObjectItem = $this->crmObject['results'][0] ?? null;
         $this->logger->infoLow('Record created.');
 
         // all seems good
@@ -514,9 +515,9 @@ class HubSpotController implements CrmControllerInterface
     /**
      * Update a record in the HubSpot API
      *
-     * @return $this
+     * @return self
      */
-    public function update()
+    public function update(): self
     {
         $this->logger->infoMid('Updating record...');
 
@@ -583,9 +584,9 @@ class HubSpotController implements CrmControllerInterface
      * Delete a record in the HubSpot API
      * Use the delete rules to determine the action to take
      *
-     * @param bool $soft Whether to soft delete or hard delete. 'true' for soft delete, 'false' for hard delete
+     * @param self
      */
-    public function delete($soft = true)
+    public function delete($soft = true): self
     {
         $this->logger->infoMid('Deleting record...');
 
@@ -689,8 +690,9 @@ class HubSpotController implements CrmControllerInterface
      * @var string $toObjectType The object type to associate to. Options: contacts, companies, deals, tickets
      * @var string $toObjectId The object id to associate to (PK)
      * @var array $associationSpec The array containing association specification. Example: [['association_type_id' => 1, 'association_category' => 'HUBSPOT_DEFINED', [... ]]
+     * @return self
      */
-    public function associate(string $toObjectType, string $toObjectId, array $associationSpec = [])
+    public function associate(string $toObjectType, string $toObjectId, array $associationSpec = []): self
     {
         $this->logger->infoMid('Process Associations...', [], $toObjectType);
 
@@ -737,16 +739,17 @@ class HubSpotController implements CrmControllerInterface
                 );
 
             // ------------------------------
-            // loop through the current associations defined in $currentAssociations and compare with the $associationSpec; any missing associations will be created and any extra associations will be removed
+            // loop through the current associations defined in $currentAssociations and compare with the $associationSpec;
+            // any missing associations will be created and any extra associations will be removed
             // check if the association exists in the current associations
             $assocExists = false;
-            $nonExistingObjectIds = [];
+            $nonExistingObjectIds = []; // association ids that whe should delete
 
-            // only action if we have associated objects
+            // (1) only action if we have associated objects
             if (!empty($currentAssociations['results'])) {
                 // loop through the current associations
                 foreach ($currentAssociations['results'] as $currentAssoc) {
-                    // check if one of the associations match the the current object id
+                    // check if one of the associations match the current object id
                     if ($currentAssoc['to_object_id'] == $toObjectId) {
                         // yes it does exists...
                         $assocExists = true;
@@ -758,9 +761,9 @@ class HubSpotController implements CrmControllerInterface
                             $nonExistingObjectIds[] = $currentAssoc['to_object_id'];
                             $assocExists = false;
                             $this->logger->infoLow('The association specs does NOT match. Marked the associations for replacement...', [], $toObjectType);
-                        }
-                        else {
-                            $this->logger->infoLow('The association specs match. Object ID: ' . $toObjectId . '; Type: ' . $toObjectType . '; Association Spec: ' . json_encode($associationSpec), [], $toObjectType);
+                        } else {
+                            $this->logger->infoLow('The association specs match.', [], $toObjectType);
+                            $this->logger->infoLow('...matching info: Object ID: ' . $toObjectId . '; Type: ' . $toObjectType . '; Association Spec: ' . json_encode($associationSpec), [], $toObjectType);
                         }
 
                         // all good, continue to next record
@@ -772,7 +775,7 @@ class HubSpotController implements CrmControllerInterface
                 }
             }
 
-            // delete all associations between two records
+            // (2) delete all associations between two records
             if (!empty($nonExistingObjectIds)) {
                 foreach ($nonExistingObjectIds as $nonExistingObjectId) {
                     $this->client->crm()->associations()->v4()->basicApi()->archive(
@@ -783,12 +786,11 @@ class HubSpotController implements CrmControllerInterface
                     );
                     $this->logger->infoLow('Association deleted. Object ID: ' . $nonExistingObjectId . '; Type: ' . $toObjectType, [], $toObjectType);
                 }
-            }
-            else {
+            } else {
                 $this->logger->infoLow('No associations to delete.', [], $toObjectType);
             }
 
-            // create the association if it does not exist
+            // (3) create the association if it does not exist
             if (!$assocExists) {
                 // loop the association specs and create the association
                 $postSpec = [];
@@ -807,8 +809,7 @@ class HubSpotController implements CrmControllerInterface
                     $postSpec
                 );
                 $this->logger->infoLow('Association created. Object ID: ' . $toObjectId . '; Type: ' . $toObjectType . '; Association Spec: ' . json_encode($associationSpec), [], $toObjectType);
-            }
-            else {
+            } else {
                 $this->logger->infoLow('No associations to create/add.', [], $toObjectType);
             }
 
@@ -819,6 +820,8 @@ class HubSpotController implements CrmControllerInterface
         } catch (Exception $e) {
             $this->logger->errorHigh('Error with object association: ' . $e->getMessage());
         }
+
+        return $this;
     }
 
     // --------------------------------------------------------------
@@ -830,7 +833,7 @@ class HubSpotController implements CrmControllerInterface
      *
      * @return bool
      */
-    public function crmObjectLoaded()
+    public function crmObjectLoaded(): bool
     {
         return !is_null($this->crmObject);
     }
@@ -840,7 +843,7 @@ class HubSpotController implements CrmControllerInterface
      *
      * @return bool
      */
-    public function crmObjectItemLoaded()
+    public function crmObjectItemLoaded(): bool
     {
         return !is_null($this->crmObjectItem);
     }
@@ -850,7 +853,7 @@ class HubSpotController implements CrmControllerInterface
      *
      * @return void
      */
-    public function crmObjectFlush()
+    public function crmObjectFlush(): void
     {
         $this->crmObject = null;
     }
@@ -860,7 +863,7 @@ class HubSpotController implements CrmControllerInterface
      *
      * @return void
      */
-    public function crmObjectItemFlush()
+    public function crmObjectItemFlush(): void
     {
         $this->crmObjectItem = null;
     }
@@ -870,7 +873,7 @@ class HubSpotController implements CrmControllerInterface
      *
      * @return int
      */
-    public function getCrmObjectTotal()
+    public function getCrmObjectTotal(): int
     {
         if (!$this->crmObjectLoaded()) {
             return 0;
@@ -883,7 +886,7 @@ class HubSpotController implements CrmControllerInterface
      *
      * @return array
      */
-    public function getCrmObjectResults()
+    public function getCrmObjectResults(): array
     {
         if (!$this->crmObjectLoaded()) {
             return [];
@@ -917,6 +920,10 @@ class HubSpotController implements CrmControllerInterface
         return $this->crmObject['paging'] ?? null;
     }
 
+    // --------------------------------------------------------------
+    // --- private helpers (not part of interface) ------------------
+    // --------------------------------------------------------------
+
     /**
      * Match the association specs to see if they are the same
      * Example:
@@ -934,7 +941,8 @@ class HubSpotController implements CrmControllerInterface
      * @param array $remoteSetup
      * @return bool
      */
-    private function matchAssociationSpecs(array $localSetup = [], array $remoteSetup = []) {
+    private function matchAssociationSpecs(array $localSetup = [], array $remoteSetup = []): bool
+    {
         // If arrays have different lengths, they cannot match
         if (count($localSetup) !== count($remoteSetup)) {
             return false;
