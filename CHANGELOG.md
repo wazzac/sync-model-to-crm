@@ -1,6 +1,6 @@
 # Release Notes
 
-## v0.4.0-beta `2024-08-28`
+## v1.0.0-beta `2024-09-06`
 > Beta Release. 🥳 Although only supporting `User` (Contact) and `Entity` (Company) synchronization for now, it's should be working as intended.
 
 ## v0.3.0-alpha `2024-07-19`
