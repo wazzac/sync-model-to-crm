@@ -10,8 +10,8 @@ use Wazza\SyncModelToCrm\Http\Controllers\CrmController;
  * public function save(array $options = [])
  * {
  *     parent::save($options);
- *     // lets call the syncModelToCrm method to sync the model to the CRM.
- *     // refer to the trait for all the available methods
+ *     {{-- lets call the syncModelToCrm method to sync the model to the CRM. --}}
+ *     {{-- refer to the trait for all the available methods --}}
  *     $this->syncToCrmPatch(); -- don't use this method if you are using observers
  * }
  */
