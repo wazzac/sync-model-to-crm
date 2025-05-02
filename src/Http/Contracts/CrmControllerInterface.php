@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Interface for the CrmController class.
  * All CRM controllers must implement this interface.
- * 
+ *
  * List of required properties:
  * public $logger;
  * public $client;
@@ -93,7 +93,7 @@ interface CrmControllerInterface
      * @param array $searchFilters The filters to apply to find the specific crm object
      * @return self
      */
-    public function load(string|null $crmObjectPrimaryKey = null, array $searchFilters = []): self;
+    public function load(?string $crmObjectPrimaryKey = null, array $searchFilters = []): self;
 
     /**
      * Create data in the chosen CRM API
@@ -107,8 +107,9 @@ interface CrmControllerInterface
 
     /**
      * Delete data in the chosen CRM API
+     * @param bool $soft If true, the delete will be a soft delete (default: true)
      */
-    public function delete($soft = true): self;
+    public function delete(bool $soft = true): self;
 
     /**
      * Associate data between different objects in the crm

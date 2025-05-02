@@ -317,7 +317,7 @@ class HubSpotController implements CrmControllerInterface
      * @param array $searchFilters The filters to apply to find the specific crm object
      * @return self
      */
-    public function load(string|null $crmObjectPrimaryKey = null, array $searchFilters = []): self
+    public function load(?string $crmObjectPrimaryKey = null, array $searchFilters = []): self
     {
         $this->logger->infoMid('Loading the CRM object with Primary Key: `' . ($crmObjectPrimaryKey ?? 'not set yet') . '` and Filters: `' . json_encode($searchFilters) . '`');
 

@@ -27,7 +27,7 @@ class BaseController extends Controller
      * @throws NotFoundExceptionInterface
      * @throws ContainerExceptionInterface
      */
-    public function __construct(string $logIdentifier = null)
+    public function __construct(?string $logIdentifier = null)
     {
         // set the logger instance
         $this->logger = new LogController($logIdentifier);

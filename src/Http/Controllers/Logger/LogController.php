@@ -77,8 +77,7 @@ final class LogController
         // set the identifier
         if ($append) {
             $this->logIdentifier .= $identifier;
-        }
-        else {
+        } else {
             $this->logIdentifier = $identifier;
         }
     }
@@ -96,7 +95,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function alert(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], string $logIdentifier = null) {
+    public function alert(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->log(self::TYPE__ALERT, $level, $string, $context, $logIdentifier);
     }
 
@@ -113,7 +113,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function critical(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], string $logIdentifier = null) {
+    public function critical(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->log(self::TYPE__CRITICAL, $level, $string, $context, $logIdentifier);
     }
 
@@ -125,7 +126,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function criticalHigh(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function criticalHigh(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->critical(self::LEVEL__HIGH, $string, $context, $logIdentifier);
     }
 
@@ -137,7 +139,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function criticalMid(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function criticalMid(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->critical(self::LEVEL__MID, $string, $context, $logIdentifier);
     }
 
@@ -149,7 +152,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function criticalLow(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function criticalLow(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->critical(self::LEVEL__LOW, $string, $context, $logIdentifier);
     }
 
@@ -166,7 +170,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function debug(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], string $logIdentifier = null) {
+    public function debug(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->log(self::TYPE__DEBUG, $level, $string, $context, $logIdentifier);
     }
 
@@ -178,7 +183,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function debugHigh(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function debugHigh(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->debug(self::LEVEL__HIGH, $string, $context, $logIdentifier);
     }
 
@@ -190,7 +196,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function debugMid(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function debugMid(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->debug(self::LEVEL__MID, $string, $context, $logIdentifier);
     }
 
@@ -202,7 +209,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function debugLow(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function debugLow(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->debug(self::LEVEL__LOW, $string, $context, $logIdentifier);
     }
 
@@ -219,7 +227,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function emergency(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], string $logIdentifier = null) {
+    public function emergency(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->log(self::TYPE__EMERGENCY, $level, $string, $context, $logIdentifier);
     }
 
@@ -231,7 +240,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function emergencyHigh(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function emergencyHigh(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->emergency(self::LEVEL__HIGH, $string, $context, $logIdentifier);
     }
 
@@ -243,7 +253,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function emergencyMid(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function emergencyMid(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->emergency(self::LEVEL__MID, $string, $context, $logIdentifier);
     }
 
@@ -255,7 +266,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function emergencyLow(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function emergencyLow(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->emergency(self::LEVEL__LOW, $string, $context, $logIdentifier);
     }
 
@@ -272,7 +284,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function error(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], string $logIdentifier = null) {
+    public function error(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->log(self::TYPE__ERROR, $level, $string, $context, $logIdentifier);
     }
 
@@ -284,7 +297,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function errorHigh(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function errorHigh(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->error(self::LEVEL__HIGH, $string, $context, $logIdentifier);
     }
 
@@ -296,7 +310,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function errorMid(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function errorMid(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->error(self::LEVEL__MID, $string, $context, $logIdentifier);
     }
 
@@ -308,7 +323,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function errorLow(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function errorLow(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->error(self::LEVEL__LOW, $string, $context, $logIdentifier);
     }
 
@@ -325,7 +341,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function info(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], string $logIdentifier = null) {
+    public function info(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->log(self::TYPE__INFO, $level, $string, $context, $logIdentifier);
     }
 
@@ -337,7 +354,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function infoHigh(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function infoHigh(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->info(self::LEVEL__HIGH, $string, $context, $logIdentifier);
     }
 
@@ -349,7 +367,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function infoMid(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function infoMid(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->info(self::LEVEL__MID, $string, $context, $logIdentifier);
     }
 
@@ -361,7 +380,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function infoLow(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function infoLow(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->info(self::LEVEL__LOW, $string, $context, $logIdentifier);
     }
 
@@ -378,7 +398,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function notice(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], string $logIdentifier = null) {
+    public function notice(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->log(self::TYPE__NOTICE, $level, $string, $context, $logIdentifier);
     }
 
@@ -390,7 +411,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function noticeHigh(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function noticeHigh(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->notice(self::LEVEL__HIGH, $string, $context, $logIdentifier);
     }
 
@@ -402,7 +424,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function noticeMid(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function noticeMid(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->notice(self::LEVEL__MID, $string, $context, $logIdentifier);
     }
 
@@ -414,7 +437,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function noticeLow(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function noticeLow(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->notice(self::LEVEL__LOW, $string, $context, $logIdentifier);
     }
 
@@ -431,7 +455,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function warning(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], string $logIdentifier = null) {
+    public function warning(int $level = self::LEVEL__HIGH, string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->log(self::TYPE__WARNING, $level, $string, $context, $logIdentifier);
     }
 
@@ -443,7 +468,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function warningHigh(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function warningHigh(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->warning(self::LEVEL__HIGH, $string, $context, $logIdentifier);
     }
 
@@ -455,7 +481,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function warningMid(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function warningMid(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->warning(self::LEVEL__MID, $string, $context, $logIdentifier);
     }
 
@@ -467,7 +494,8 @@ final class LogController
      * @param string|null $logIdentifier An additional log identifier for this method call only
      * @return void
      */
-    public function warningLow(string $string = "", array $context = [], string $logIdentifier = null) {
+    public function warningLow(string $string = "", array $context = [], ?string $logIdentifier = null)
+    {
         $this->warning(self::LEVEL__LOW, $string, $context, $logIdentifier);
     }
 
@@ -490,7 +518,7 @@ final class LogController
         int $level = self::LEVEL__HIGH,
         string $string = "",
         array $context = [],
-        string $logIdentifier = null,
+        ?string $logIdentifier = null,
     ) {
         // load the config
         $logConf = config('sync_modeltocrm.logging');
@@ -513,10 +541,9 @@ final class LogController
 
             // if $logIdentifier is provided and it already has block brackets, don't add another set when appending to $logString
             if (!empty($logIdentifier)) {
-                if (substr($logIdentifier, 0, 1) === '[' && substr($logIdentifier, -1) === ']'){
+                if (substr($logIdentifier, 0, 1) === '[' && substr($logIdentifier, -1) === ']') {
                     $logString .= $logIdentifier;
-                }
-                else {
+                } else {
                     $logString .= '[' . $logIdentifier . ']';
                 }
             }
@@ -553,7 +580,7 @@ final class LogController
         int $level = self::LEVEL__HIGH,
         string $string = "",
         array $context = [],
-        string $logIdentifier = null,
+        ?string $logIdentifier = null,
     ) {
         (new LogController($logIdentifier))->log($type, $level, $string, $context);
     }
