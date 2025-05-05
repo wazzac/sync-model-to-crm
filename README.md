@@ -23,6 +23,10 @@ Add a few property configurations to your Laravel Models, configure sync trigger
     - ZohoCrm
     - etc.
 
+## Requirements
+This version of the package (v1.x.x) will only work with Laravel v12.x:
+- v12.x - https://laravel.com/docs/12.x/installation
+
 ## Overview
 
 The idea around this library is to make it very easy for a developer to define inside each applicable Model (like `User`, `Entity`, `Order`, etc.) which properties should syncronize to which CRM Provider and Environment.
@@ -370,7 +374,7 @@ Executing `(new CrmController())->setModel($user)->execute();`:
 
 ## Installation
 
-> PHP 8.1 is a minimum requirement for this project.
+> PHP `8.2` is a minimum requirement for this project.
 
 1. Open terminal and require the package:
 
@@ -378,30 +382,19 @@ Executing `(new CrmController())->setModel($user)->execute();`:
     composer require wazza/sync-model-to-crm
     ```
 
-2. Navigate to the `config` directory within your Laravel project and open the `app.php` file.
+2. **Register the Service Provider:**
 
-    - Look for the `providers` array within the `app.php` file.
-    - Inside the `providers` array, add the following line and save: `Wazza\SyncModelToCrm\Providers\SyncModelToCrmServiceProvider::class,` see example below:
+    Open the `bootstrap/providers.php` file and add the service provider to the array:
 
-        ```php
-        'providers' => ServiceProvider::defaultProviders()->merge([
-            /*
-            * Package Service Providers...
-            */
-            Wazza\SyncModelToCrm\Providers\SyncModelToCrmServiceProvider::class, // <-- here
-            Wazza\DomTranslate\Providers\DomTranslateServiceProvider::class,
+    ```php
+    <?php
 
-            /*
-            * Application Service Providers...
-            */
-            App\Providers\AppServiceProvider::class,
-            App\Providers\AuthServiceProvider::class,
-            // App\Providers\BroadcastServiceProvider::class,
-            App\Providers\EventServiceProvider::class,
-            App\Providers\RouteServiceProvider::class,
-        ])->toArray(),
-
-        ```
+    return [
+        App\Providers\AppServiceProvider::class,
+        Wazza\SyncModelToCrm\Providers\SyncModelToCrmServiceProvider::class, // <-- Add this line
+    ];
+    ```
+    > **Note:** If your package supports Laravel's auto-discovery feature (check your package's `composer.json` for the `extra.laravel.providers` key), this manual registration step might be optional.
 
 3. In your terminal again, complete the setup by running the below commands:
 
