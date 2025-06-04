@@ -1,10 +1,15 @@
 # Release Notes
 
-## v1.1.0 `2025-05-10`
+## v1.1.0 `2025-06-04`
 
 ### Stable Release 🚀
 
 Our first stable release. The package has been in beta for a few months without any major issues. We will keep on improving the codebase and continue to add more sync functionality.
+
+- Added the ability for the `smtc_external_key_lookup` mapping table to support both `uuid` and `int` foreign keys.
+- Fixed a bug in the `crmTrait` file where the Model instance was not given but the Model name (string).
+- Fixed PHP class types.
+- Documentation updates.
 
 ## v1.0.0-beta `2024-09-06`
 
