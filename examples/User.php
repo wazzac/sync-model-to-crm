@@ -6,7 +6,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use App\Models\Entity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController;
@@ -14,7 +13,7 @@ use Wazza\SyncModelToCrm\Traits\crmTrait;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes;
     use crmTrait; // include this if you wish to use the `Mutators function` or $this->syncToCrm() directly as appose to the observer method
 
     /**
