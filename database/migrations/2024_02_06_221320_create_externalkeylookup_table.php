@@ -43,7 +43,7 @@ class CreateExternalKeyLookupTable extends Migration
             $table->index('ext_object_id');
             $table->index('ext_environment');
 
-            // composite index indexes
+            // composite indexes
             $table->index(['object_type', 'object_id']);
             $table->index(['ext_provider', 'ext_object_type', 'ext_object_id', 'ext_environment'], 'object_lookup_ext_provider_env_oid_ot_index');
         });
