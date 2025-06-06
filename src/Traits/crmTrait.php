@@ -33,10 +33,13 @@ trait crmTrait
         string|array|null $provider = null
     ): void {
         /**
-         * get the current model the trait is called from
-         * @var \Illuminate\Database\Eloquent\Model|null $model
+         * Get the current model instance the trait is called from
+         * @var \Illuminate\Database\Eloquent\Model $model
          */
-        $model = get_class($this);
+        $model = $this;
+        if (!$model instanceof \Illuminate\Database\Eloquent\Model) {
+            throw new \InvalidArgumentException('The syncToCrm method can only be called from an Eloquent model instance.');
+        }
 
         // initiate a crm sync process
         $crmSync = new CrmController(null, $actions);

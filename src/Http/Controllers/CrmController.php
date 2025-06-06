@@ -126,7 +126,7 @@ class CrmController extends BaseController
      * @throws NotFoundExceptionInterface
      * @throws ContainerExceptionInterface
      */
-    public function __construct(string $logIdentifier = null, array|string|null $actions = null)
+    public function __construct(?string $logIdentifier = null, array|string|null $actions = null)
     {
         // parent constructor
         parent::__construct($logIdentifier);
@@ -229,7 +229,7 @@ class CrmController extends BaseController
      * @param \Illuminate\Database\Eloquent\Model|null $model
      * @return $this
      */
-    public function setModel(Model $model = null)
+    public function setModel(?Model $model = null)
     {
         // -- set the model
         $this->model = $model;
@@ -859,7 +859,7 @@ class CrmController extends BaseController
      * @return bool
      * @throws Exception
      */
-    private function processEnvironment(string $currentEnvironment = null, array|string|null $requestedEnvironment = null): bool
+    private function processEnvironment(?string $currentEnvironment = null, array|string|null $requestedEnvironment = null): bool
     {
         // make sure we have a current environment
         if (empty($currentEnvironment)) {

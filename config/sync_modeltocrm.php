@@ -49,4 +49,11 @@ return [
         'salt' => env('SYNC_MODEL_TO_CRM_HASH_SALT', 'Ey4cw2BHvi0HmGYjyqYr'),
         'algo' => env('SYNC_MODEL_TO_CRM_HASH_ALGO', 'sha256'),
     ],
+
+    // Local database Primary key format
+    // Options: 'int' (default) or 'uuid'
+    // ------------------------------------------------------------
+    'db' => [
+        'primary_key_format' => env('SYNC_MODEL_TO_CRM_DB_PRIMARY_KEY_FORMAT', 'int'), // int or uuid (36)
+    ],
 ];

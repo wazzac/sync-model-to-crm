@@ -3,7 +3,6 @@
 namespace Wazza\SyncModelToCrm\Providers;
 
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-use Wazza\SyncModelToCrm\Http\Controllers\CrmController;
 
 class SyncModelToCrmServiceProvider extends BaseServiceProvider
 {
@@ -38,9 +37,9 @@ class SyncModelToCrmServiceProvider extends BaseServiceProvider
             'sync_modeltocrm'
         );
 
-        // Register the service the package provides.
+        // Register the singleton service the package provides.
         // $this->app->singleton(CrmController::class, function () {
-        //     return new CrmController();
+        //     return new \Wazza\SyncModelToCrm\Http\Controllers\CrmController();
         // });
     }
 

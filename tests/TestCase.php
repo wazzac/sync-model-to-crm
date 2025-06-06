@@ -52,6 +52,7 @@ abstract class TestCase extends OrchestraTestCase
             'database' => __DIR__ . '/testdb.sqlite',
             'prefix' => '',
         ]);
+        $app['config']->set('sync_modeltocrm.db.primary_key_format', env('SYNC_MODEL_TO_CRM_DB_PRIMARY_KEY_FORMAT', 'int'));
         $app['config']->set('sync_modeltocrm.logging.level', env('SYNC_MODEL_TO_CRM_LOG_LEVEL'));
         $app['config']->set('sync_modeltocrm.logging.indicator', env('SYNC_MODEL_TO_CRM_LOG_INDICATOR'));
         $app['config']->set('sync_modeltocrm.api.provider', env('SYNC_MODEL_TO_CRM_PROVIDER'));

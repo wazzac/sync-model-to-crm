@@ -1,59 +1,72 @@
 <p align="center">
-<a href="https://github.com/wazzac/sync-model-to-crm/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/wazzac/sync-model-to-crm"></a>
-<a href="https://github.com/wazzac/sync-model-to-crm/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/wazzac/sync-model-to-crm"></a>
-<a href="https://github.com/wazzac/sync-model-to-crm/blob/main/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/wazzac/sync-model-to-crm"></a>
+    <a href="https://github.com/wazzac/sync-model-to-crm/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/wazzac/sync-model-to-crm"></a>
+    <a href="https://github.com/wazzac/sync-model-to-crm/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/wazzac/sync-model-to-crm"></a>
+    <a href="https://github.com/wazzac/sync-model-to-crm/blob/main/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/wazzac/sync-model-to-crm"></a>
 </p>
 
-# Synchronize a Model to a Remote CRM Object
+# Sync Model to CRM
 
-A library that will syncronise any defined database table properties/associations (inside the Model) to an external CRM provider, like [HubSpot](https://www.hubspot.com/), [Pipedrive](https://www.pipedrive.com/en) and more.
+Easily synchronize your Laravel Eloquent models with remote CRM providers such as [HubSpot](https://www.hubspot.com/), [Pipedrive](https://www.pipedrive.com/en), and more. This package allows you to define which model properties and relationships should be kept in sync with external CRM objects, providing a seamless integration experience.
 
-<strong>Steps:</strong>
-Add a few property configurations to your Laravel Models, configure sync trigger via Observers or Model Mutators and monitor the logs to see how your data is automatically syncronised with a HubSpot object (like customer). You can also trigger the sync process via an event job.
+---
 
-### Current Support:
-- HubSpot:
-    - Local `User` syncronization with the `Contact` object.
-    - Local `Entity` syncronization with the `Company` object.
-    - Associations between `Contact` and `Company` records.
-    - Coming soon... `Deal` & `Ticket` objects.
-- Future Support:
-    - Pipedrive
-    - Salesforce
-    - ZohoCrm
-    - etc.
+## Features
 
-## Overview
+-   **Flexible Property Mapping:** Define which model attributes map to CRM fields.
+-   **Multi-Environment Support:** Sync to multiple CRM environments (e.g., sandbox, production).
+-   **Relationship Sync:** Automatically associate related models (e.g., User to Company).
+-   **Customizable Sync Triggers:** Initiate syncs via observers, mutators, or queued jobs.
+-   **Extensible:** Easily add support for additional CRM providers.
 
-The idea around this library is to make it very easy for a developer to define inside each applicable Model (like `User`, `Entity`, `Order`, etc.) which properties should syncronize to which CRM Provider and Environment.
+---
 
-After each first time successful sync, the CRM Object primary key will be stored in a mapping table against the local table primary key. This allows for quicker loading times for future changes.
+## Supported CRMs
 
-Update your Model with 7 properties that define the rules for 3rd-party CRM synchronization:
+-   **HubSpot**
+    -   Sync `User` model to HubSpot `Contact` object.
+    -   Sync `Entity` model to HubSpot `Company` object.
+    -   Manage associations between `Contact` and `Company`.
+    -   (Coming soon) Support for `Deal` and `Ticket` objects.
+-   **Planned Support**
+    -   Pipedrive
+    -   Salesforce
+    -   Zoho CRM
+    -   Others
 
--   @var string|array|null `$syncModelCrmEnvironment`;
-    > `config('sync_modeltocrm.api.environment')` will be used if not provided.
--   @var array `$syncModelCrmPropertyMapping`; _\*Required_
--   @var array `$syncModelCrmUniqueSearch`; _\*Required_
--   @var string `$syncModelCrmRelatedObject`;
-    > `config('sync_modeltocrm.api.providers.{provider}.object_table_mapping')` will be used if this is not provided.
--   @var array `$syncModelCrmDeleteRules`; _\*Required for delete actions_
--   @var array `$syncModelCrmActiveRules`; _\*Required for restore actions_
--   @var array `$syncModelCrmAssociateRules`; _\*Required when associations are true_
+---
 
-Looking at the below example:
+## Requirements
 
-1. The `User` Model will syncronize to both the `Sandbox` and `Production` **HubSpot** environments _($syncModelCrmEnvironment)_.
-2. It will only syncronize the `name` and `email` properties to the HubSpot corresponding `firstname` and `email` fields _($syncModelCrmPropertyMapping)_.
-3. When there are no internal mapping yet stored, the CRM record will be uniquely loaded using the `email` property _($syncModelCrmUniqueSearch)_.
-4. In order for the script to know which remote CRM object relates to the User model, `contact` _($syncModelCrmRelatedObject)_ have to be defined as the remote item.
-5. The _($syncModelCrmDeleteRules)_ property is used to instruct the CRM what action to take when a local record is deleted/removed. For example, when _SoftDeletes_ are enabled locally, the crm will use the `soft_delete` rules to update the crm records or alternatively Archive the record in the crm.
-6. The reverse to the above, _($syncModelCrmActiveRules)_ will be used to define the action that will be taken when deleted records are activated again.
-7. Finally, the non-required _($syncModelCrmAssociateRules)_ property is used to define the relationship (associations) between objects. e.g. `user` to `entity`.
+-   **PHP:** 8.2 or higher
+-   **Laravel:** 12.x
 
-```PHP
-<?php
+---
 
+## How It Works
+
+Define a set of properties on your Eloquent models to control how and when they sync with your CRM provider. After the first successful sync, the CRM object’s primary key is stored in a mapping table for efficient future updates.
+
+### Required Model Properties
+
+Add the following properties to your model to enable CRM synchronization:
+
+| Property                       | Type              | Description                                                                                  |
+| ------------------------------ | ----------------- | -------------------------------------------------------------------------------------------- |
+| `$syncModelCrmEnvironment`     | string/array/null | CRM environments to sync with (e.g., `['sandbox', 'production']`). Defaults to config value. |
+| `$syncModelCrmPropertyMapping` | array (required)  | Maps local model attributes to CRM fields.                                                   |
+| `$syncModelCrmUniqueSearch`    | array (required)  | Defines unique fields for identifying CRM records.                                           |
+| `$syncModelCrmRelatedObject`   | string            | CRM object type (e.g., `contact`). Defaults to config mapping.                               |
+| `$syncModelCrmDeleteRules`     | array (required)  | Rules for handling deletes (soft/hard) in the CRM.                                           |
+| `$syncModelCrmActiveRules`     | array (required)  | Rules for restoring/reactivating records in the CRM.                                         |
+| `$syncModelCrmAssociateRules`  | array (optional)  | Defines associations with other CRM objects.                                                 |
+
+---
+
+### Example: User Model
+
+Below is a sample `User` model configured for CRM synchronization:
+
+```php
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -253,44 +266,41 @@ class User extends Authenticatable
 
         // lets call the syncModelToCrm method to sync the model to the CRM.
         // refer to the trait for all the available methods
-        // $this->syncToCrmPatch(); -- disabled as we are currently using the observer method
+        $this->syncToCrmPatch(); // -- disabled as we are currently using the observer method
     }
 }
 ```
 
+---
+
 ## Usage
 
-The are a few methods that you can use to initiate a Model sync.
+You can trigger a model sync in several ways:
 
-Executing `(new CrmController())->setModel($user)->execute();`:
+1. **Directly in a Controller:**
 
-1. Directly in a controller action.
-2. Using the trait inside the model as a type of Mutators function.
-3. Via a Observer. e.g. inside a UserObserver to trigger after a save() event. (see below)
+    ```php
+    (new CrmController())->setModel($user)->execute();
+    ```
 
-    ```PHP
-    <?php
+2. **Using the Trait in a Mutator:**
+   Call `$this->syncToCrm()` within your model.
 
+3. **Via an Observer:**
+   Register an observer to automatically sync after save, update, delete, or restore events.
+
+    ```php
     namespace App\Observers;
 
     use App\Models\User;
     use Wazza\SyncModelToCrm\Http\Controllers\CrmController;
     use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
-    /**
-     * Register the observer in the AppServiceProvider boot method
-     *
-     * public function boot(): void
-     *  {
-     *      // register the observer/s
-     *      \App\Models\User::observe(\App\Observers\UserObserver::class);
-     *  }
-     */
     class UserObserver implements ShouldHandleEventsAfterCommit
     {
         /**
-        * Handle the User "created" event.
-        */
+         * Handle the User "created" event.
+         */
         public function created(User $user): void
         {
             echo ('create...');
@@ -302,8 +312,8 @@ Executing `(new CrmController())->setModel($user)->execute();`:
         }
 
         /**
-        * Handle the User "updated" event.
-        */
+         * Handle the User "updated" event.
+         */
         public function updated(User $user): void
         {
             echo ('update...');
@@ -315,9 +325,9 @@ Executing `(new CrmController())->setModel($user)->execute();`:
         }
 
         /**
-        * Handle the User "deleted" event.
-        * Run when a user is soft-deleted.
-        */
+         * Handle the User "deleted" event.
+         * Run when a user is soft-deleted.
+         */
         public function deleted(User $user)
         {
             echo ('delete...');
@@ -329,9 +339,9 @@ Executing `(new CrmController())->setModel($user)->execute();`:
         }
 
         /**
-        * Handle the User "restored" event.
-        * Soft-delete has been reversed.
-        */
+         * Handle the User "restored" event.
+         * Soft-delete has been reversed.
+         */
         public function restored(User $user): void
         {
             echo ('restore...');
@@ -343,67 +353,64 @@ Executing `(new CrmController())->setModel($user)->execute();`:
         }
 
         /**
-        * Handle the User "force deleted" event.
-        */
+         * Handle the User "force deleted" event.
+         */
         public function forceDeleted(User $user): void
         {
             echo ('forceDeleted...');
         }
 
         /**
-        * Handle the User "saved" event.
-        *
-        */
+         * Handle the User "saved" event.
+         *
+         */
         public function saved(User $user): void
         {
-            echo ('saving...');
-            (new CrmController())
-                ->setModel($user)
-                ->setAttemptAll() // open for anything...
-                ->execute();
-            echo ('saved...');
+            // echo ('saving...');
+            // (new CrmController())
+            //     ->setModel($user)
+            //     ->setAttemptAll() // open for anything...
+            //     ->execute(true);
+            // echo ('saved...');
         }
     }
     ```
 
-4. Inside an event job. This is a good method to separate the logic from the save event and put the sync in a job queue to be processed shortly after the record has been saved.
+    Register the observer in your `AppServiceProvider`:
+
+    ```php
+    public function boot(): void
+    {
+        \App\Models\User::observe(\App\Observers\UserObserver::class);
+    }
+    ```
+
+4. **In a Job:**
+   Offload sync logic to a queued job for asynchronous processing.
+
+---
 
 ## Installation
 
-> PHP 8.1 is a minimum requirement for this project.
-
-1. Open terminal and require the package:
+1. **Install via Composer:**
 
     ```bash
     composer require wazza/sync-model-to-crm
     ```
 
-2. Navigate to the `config` directory within your Laravel project and open the `app.php` file.
+2. **Register the Service Provider (if not auto-discovered):**
+   Add to `bootstrap/providers.php`:
 
-    - Look for the `providers` array within the `app.php` file.
-    - Inside the `providers` array, add the following line and save: `Wazza\SyncModelToCrm\Providers\SyncModelToCrmServiceProvider::class,` see example below:
-
-        ```php
-        'providers' => ServiceProvider::defaultProviders()->merge([
-            /*
-            * Package Service Providers...
-            */
-            Wazza\SyncModelToCrm\Providers\SyncModelToCrmServiceProvider::class, // <-- here
-            Wazza\DomTranslate\Providers\DomTranslateServiceProvider::class,
-
-            /*
-            * Application Service Providers...
-            */
+    ```php
+    return [
             App\Providers\AppServiceProvider::class,
-            App\Providers\AuthServiceProvider::class,
-            // App\Providers\BroadcastServiceProvider::class,
-            App\Providers\EventServiceProvider::class,
-            App\Providers\RouteServiceProvider::class,
-        ])->toArray(),
+            Wazza\SyncModelToCrm\Providers\SyncModelToCrmServiceProvider::class,
+    ];
+    ```
 
-        ```
+    > _If your package supports Laravel auto-discovery, this step may be optional._
 
-3. In your terminal again, complete the setup by running the below commands:
+3. **Publish Config and Migrations:**
 
     ```bash
     php artisan vendor:publish --tag="sync-modeltocrm-config"
@@ -411,9 +418,11 @@ Executing `(new CrmController())->setModel($user)->execute();`:
     php artisan migrate
     ```
 
-4. Below are some of the environment keys that can be added to your _.env_ configuration. If you need more information what each item does, refer to the `config/sync_modeltocrm.php` config file.
+4. **Configure Environment Variables:**
+   Add the following to your `.env` file (see `config/sync_modeltocrm.php` for details):
 
     ```
+    SYNC_MODEL_TO_CRM_DB_PRIMARY_KEY_FORMAT=int
     SYNC_MODEL_TO_CRM_HASH_SALT=Ey4cw2BHvi0HmGYjyqYr
     SYNC_MODEL_TO_CRM_HASH_ALGO=sha256
     SYNC_MODEL_TO_CRM_LOG_INDICATOR=sync-modeltocrm
@@ -424,46 +433,62 @@ Executing `(new CrmController())->setModel($user)->execute();`:
     SYNC_MODEL_TO_CRM_PROVIDER_HUBSPOT_SANDBOX_TOKEN=xxx-xxx-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     ```
 
-5. Run `config:cache` after you have made your env changes.
+5. **Cache Config:**
 
     ```bash
+    php artisan config:clear
     php artisan config:cache
     ```
 
-6. **Done**. Review any configuration file changes that you might want to change. The config file was published to the main config folder.
+6. **Review Configuration:**
+   Adjust the published config file as needed.
 
-## Looking at the logs
+---
 
-Depending on your log level (refer to your config file settings: 1:high to 3:low) less or more information will be written to your Laravel log file.
+## Monitoring & Logs
 
-You can track the transactions by running `tail -f {log path}` or even including `grep` with the unique transaction 8 digit code.
+Set your desired log level in the config file (`1` = high, `3` = low verbosity).
+Monitor sync activity in your Laravel log file:
+
+```bash
+tail -f storage/logs/laravel.log | grep sync-modeltocrm
+```
+
+---
 
 ## Testing
 
-Run the following command to execute tests:
+Run the test suite with:
 
 ```bash
 ./vendor/bin/pest
 ```
-Output Example:
+
+Example output:
 
 ```bash
-   PASS  Tests\Unit\EnvTest
-  ✓ it should have the correct environment variables set         1.11s
+     PASS  Tests\Unit\EnvTest
+    ✓ it should have the correct environment variables set         1.11s
 
-   PASS  Tests\Unit\ExampleTest
-  ✓ it contains a successful example unit test                   0.33s
+     PASS  Tests\Unit\ExampleTest
+    ✓ it contains a successful example unit test                   0.33s
 
-   PASS  Tests\Unit\ModelTest
-  ✓ it can create a new SmtcExternalKeyLookup model record       0.31s
-  ✓ it can mass assign data to the SmtcExternalKeyLookup model   0.25s
-  ✓ it can update the SmtcExternalKeyLookup model record         0.35s
+     PASS  Tests\Unit\ModelTest
+    ✓ it can create a new SmtcExternalKeyLookup model record       0.31s
+    ✓ it can mass assign data to the SmtcExternalKeyLookup model   0.25s
+    ✓ it can update the SmtcExternalKeyLookup model record         0.35s
 
-   PASS  Tests\Feature\ExampleTest
-  ✓ it contains a successful example feature test                0.24s
+     PASS  Tests\Feature\ExampleTest
+    ✓ it contains a successful example feature test                0.24s
 
-  Tests:    6 passed (25 assertions)
-  Duration: 3.84s
+    Tests:    6 passed (25 assertions)
+    Duration: 3.84s
 ```
 
-> Note: More test to follow in the next release.
+> More tests and features coming soon!
+
+---
+
+## License
+
+This project is open-sourced under the [MIT license](LICENSE).
