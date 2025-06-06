@@ -2,19 +2,28 @@
     "name": "wazza/sync-model-to-crm",
     "description": "Helper package to simplify Laravel Model data sync to CRM's. Currently only supported CRM - HubSpot.",
     "type": "library",
-    "version": "1.1.0",
+    "keywords": [
+        "laravel",
+        "crm",
+        "hubspot",
+        "sync",
+        "package"
+    ],
+    "homepage": "https://www.wazzac.dev",
+    "repository": "https://github.com/wazzacdev/sync-model-to-crm",
+    "readme": "README.md",
     "require": {
-        "php": "^8.2 || ^8.3",
         "ext-json": "*",
-        "illuminate/support": "^12.0",
         "guzzlehttp/guzzle": "^7.8",
-        "hubspot/api-client": "^10.2"
+        "hubspot/api-client": "^10.2",
+        "illuminate/support": "^12.0",
+        "php": "^8.2 || ^8.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.20.0",
-        "orchestra/testbench": "^10.0",
-        "mockery/mockery": "^1.2",
         "laravel/legacy-factories": "~1",
+        "mockery/mockery": "^1.2",
+        "orchestra/testbench": "^10.0",
         "pestphp/pest": "^3.8",
         "pestphp/pest-plugin-laravel": "^3.2",
         "phpunit/phpunit": "^11.0"
@@ -50,6 +59,10 @@
             "homepage": "https://www.wazzac.dev"
         }
     ],
+    "support": {
+        "issues": "https://github.com/wazzacdev/sync-model-to-crm/issues",
+        "source": "https://github.com/wazzacdev/sync-model-to-crm"
+    },
     "scripts": {
         "post-autoload-dump": [
             "@php ./vendor/bin/testbench package:discover --ansi"
