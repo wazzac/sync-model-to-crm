@@ -15,7 +15,7 @@ Our first stable release. The package has been in beta for a few months without 
 
 ### Beta Release 🥳
 
-Although only supporting `User` (Contact) and `Entity` (Company) synchronization for now, it's should be working as intended.
+Although only supporting `User` (Contact) and `Entity` (Company) synchronization for now, it should be working as intended.
 
 ## v0.3.0-alpha `2024-07-19`
 
