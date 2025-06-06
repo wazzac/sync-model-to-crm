@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace Demo\App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Entity;
+use Demo\App\Models\Entity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController;
 use Wazza\SyncModelToCrm\Traits\crmTrait;
