@@ -11,6 +11,10 @@ class SmtcExternalKeyLookup extends Model
 {
     use HasFactory;
 
+    /**
+     * The factory for creating instances of this model.
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
     public static function newFactory()
     {
         return SmtcExternalKeyLookupFactory::new();
@@ -95,7 +99,7 @@ class SmtcExternalKeyLookup extends Model
 
     /**
      * Get the lookup object by the internal object type and id, or create it if it doesn't exist.
-     * @param string $objecType The local object type.
+     * @param string $objectType The local object type.
      * @param string $objectId The local object ID.
      * @param string $extProvider The external provider.
      * @param string $extObjectType The external object type.
@@ -104,7 +108,7 @@ class SmtcExternalKeyLookup extends Model
      * @return self
      */
     public static function viaObjectCreate(
-        string $objecType,
+        string $objectType,
         string $objectId,
         string $extProvider,
         string $extObjectType,
@@ -113,7 +117,7 @@ class SmtcExternalKeyLookup extends Model
     ): self {
         // load the record or create it
         return self::firstOrCreate([
-            'object_type' => $objecType,
+            'object_type' => $objectType,
             'object_id' => $objectId
         ], [
             'ext_provider' => $extProvider,
@@ -128,7 +132,7 @@ class SmtcExternalKeyLookup extends Model
      * @param string $extProvider The external provider.
      * @param string $extObjectType The external object type.
      * @param string $extObjectId The external object ID.
-     * @param string $objecType The local object type.
+     * @param string $objectType The local object type.
      * @param string $objectId The local object ID.
      * @param string $extEnvironment The external environment (defaults to 'production').
      * @return self
@@ -137,7 +141,7 @@ class SmtcExternalKeyLookup extends Model
         string $extProvider,
         string $extObjectType,
         string $extObjectId,
-        string $objecType,
+        string $objectType,
         string $objectId,
         string $extEnvironment = 'production'
     ): self {
@@ -150,7 +154,7 @@ class SmtcExternalKeyLookup extends Model
                 'ext_environment' => $extEnvironment
             ],
             [
-                'object_type' => $objecType,
+                'object_type' => $objectType,
                 'object_id' => $objectId,
             ]
         );
@@ -195,7 +199,7 @@ class SmtcExternalKeyLookup extends Model
      * Find or create/update the external key lookup table entry using updateOrCreate.
      *
      * @param string|null $objectId The local model primary key.
-     * @param string|null $objecType The local model class name.
+     * @param string|null $objectType The local model class name.
      * @param string|null $extProvider The external provider name.
      * @param string|null $extEnvironment The external environment name. Defaults to 'production' if null.
      * @param string|null $extObjectType The external object type.
@@ -204,14 +208,14 @@ class SmtcExternalKeyLookup extends Model
      */
     public static function updateKeyLookup(
         string|null $objectId = null,
-        string|null $objecType = null,
+        string|null $objectType = null,
         string|null $extProvider = null,
         string|null $extEnvironment = null,
         string|null $extObjectType = null,
         string|null $extObjectId = null
     ): self {
         return self::updateOrCreate([
-            'object_type' => $objecType,
+            'object_type' => $objectType,
             'object_id' => $objectId,
             'ext_provider' => $extProvider,
             'ext_object_type' => $extObjectType,
