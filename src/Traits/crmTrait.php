@@ -38,7 +38,7 @@ trait crmTrait
          */
         $model = $this;
         if (!$model instanceof \Illuminate\Database\Eloquent\Model) {
-            throw new \Exception('The syncToCrm method can only be called from an Eloquent model instance.');
+            throw new \InvalidArgumentException('The syncToCrm method can only be called from an Eloquent model instance.');
         }
 
         // initiate a crm sync process
