@@ -124,6 +124,11 @@ trait crmTrait
         string|array|null $environment = null,
         string|array|null $provider = null
     ): void {
-        $this->syncToCrm([CrmController::EXEC_ACTION_CREATE, CrmController::EXEC_ACTION_UPDATE], $associations, $environment, $provider);
+        $this->syncToCrm(
+            [CrmController::EXEC_ACTION_CREATE, CrmController::EXEC_ACTION_UPDATE],
+            $associations,
+            $environment,
+            $provider
+        );
     }
 }

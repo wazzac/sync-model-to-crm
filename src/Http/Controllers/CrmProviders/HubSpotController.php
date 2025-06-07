@@ -375,7 +375,7 @@ class HubSpotController implements CrmControllerInterface
                         // also set the object item (use the first record as the filter should find a unique record)
                         $this->crmObjectItem = $this->crmObject['results'][0] ?? null;
                     }
-                } catch (ContactSimplePublicObjectInput $ex) {
+                } catch (ContactApiException $ex) {
                     $this->logger->errorHigh('Error loading contact: ' . $ex->getMessage());
                 } catch (Exception $e) {
                     $this->logger->errorHigh('Error loading contact: ' . $e->getMessage());
@@ -426,7 +426,7 @@ class HubSpotController implements CrmControllerInterface
                         // also set the object item (use the first record as the filter should find a unique record)
                         $this->crmObjectItem = $this->crmObject['results'][0] ?? null;
                     }
-                } catch (CompanySimplePublicObjectInput $ex) {
+                } catch (CompanyApiException $ex) {
                     $this->logger->errorHigh('Error loading company: ' . $ex->getMessage());
                 } catch (Exception $e) {
                     $this->logger->errorHigh('Error loading company: ' . $e->getMessage());
