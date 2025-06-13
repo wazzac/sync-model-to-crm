@@ -10,7 +10,7 @@
         "package"
     ],
     "homepage": "https://www.wazzac.dev",
-    "repository": "https://github.com/wazzacdev/sync-model-to-crm",
+    "repository": "https://github.com/wazzac/sync-model-to-crm",
     "readme": "README.md",
     "require": {
         "ext-json": "*",
