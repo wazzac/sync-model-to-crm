@@ -1,5 +1,7 @@
 # Release Notes
 
+## v1.2.0 `unsure...`
+
 ## v1.1.0 `2025-06-04`
 
 ### Stable Release 🚀

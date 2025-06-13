@@ -14,7 +14,7 @@ use Exception;
 
 /**
  * Sync Class CrmController
- * Example: (new CrmController())->setModel($user)->execute();
+ * Example: app(CrmController::class)->setModel($user)->execute();
  *
  * @package Wazza\SyncModelToCrm\Http\Controllers
  * @version 1.0.0
