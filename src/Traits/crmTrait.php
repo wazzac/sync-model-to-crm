@@ -5,7 +5,10 @@ namespace Wazza\SyncModelToCrm\Traits;
 use Wazza\SyncModelToCrm\Http\Controllers\CrmController;
 
 /**
- * Include the below trait in your model to enable CRM sync functionality.
+ * Include the below trait in your model to enable CRM sync functionality
+ * manually by $this->syncToCrm() method. You do not have to use this
+ * trait if you plan to use observers or want to include the ShouldSyncOnSaveTrait
+ * trait that will automatically sync the model to the CRM on save.
  *
  * public function save(array $options = [])
  * {
@@ -15,7 +18,7 @@ use Wazza\SyncModelToCrm\Http\Controllers\CrmController;
  *     $this->syncToCrmPatch(); -- don't use this method if you are using observers
  * }
  */
-trait crmTrait
+trait CrmTrait
 {
     /**
      * Initiate a `Sync Model to CRM` process
@@ -42,7 +45,8 @@ trait crmTrait
         }
 
         // initiate a crm sync process
-        $crmSync = new CrmController(null, $actions);
+        $crmSync = app(CrmController::class);
+        $crmSync->setActions($actions);
         $crmSync->setModel($model);
         $crmSync->execute($associations, $environment, $provider);
     }

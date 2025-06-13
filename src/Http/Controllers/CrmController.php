@@ -135,6 +135,25 @@ class CrmController extends BaseController
         $this->setAttemptAll(false);
 
         // make sure actions is an array
+        $this->setActions($actions);
+
+        // anything else to do here?
+        // ...
+    }
+
+    // --------------------------------------------------------------
+    // -- setters ---------------------------------------------------
+    // --------------------------------------------------------------
+
+    /**
+     * Set the actions to be executed
+     *
+     * @param array|string|null $actions - default to config value
+     * @return $this
+     */
+    public function setActions(array|string|null $actions = null): self
+    {
+        // make sure actions is an array
         if (empty($actions)) {
             $actions = [self::EXEC_ACTION_CREATE, self::EXEC_ACTION_UPDATE];
         }
@@ -164,14 +183,8 @@ class CrmController extends BaseController
                     break;
             }
         }
-
-        // anything else to do here?
-        // ...
+        return $this;
     }
-
-    // --------------------------------------------------------------
-    // -- setters ---------------------------------------------------
-    // --------------------------------------------------------------
 
     /**
      * Set the environment for the CRM provider
@@ -344,6 +357,21 @@ class CrmController extends BaseController
     // --------------------------------------------------------------
     // -- getters ---------------------------------------------------
     // --------------------------------------------------------------
+
+    /**
+     * Get the actions to be executed
+     *
+     * @return array
+     */
+    public function getAction(): array
+    {
+        return [
+            'create' => $this->shouldCreate(),
+            'update' => $this->shouldUpdate(),
+            'delete' => $this->shouldDelete(),
+            'restore' => $this->shouldRestore(),
+        ];
+    }
 
     /**
      * Get the environment for the CRM provider
