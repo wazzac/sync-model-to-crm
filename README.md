@@ -77,7 +77,7 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\Entity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController;
-use Wazza\SyncModelToCrm\Traits\HasCrmSyncTrait;
+use Wazza\SyncModelToCrm\Traits\HasCrmSync;
 
 class User extends Authenticatable
 {
@@ -85,7 +85,7 @@ class User extends Authenticatable
 
     // include this if you wish to use the `Mutators function` or
     // $this->syncToCrm() directly as appose to the observer method
-    use HasCrmSyncTrait;
+    use HasCrmSync;
 
     /**
      * The attributes that are mass assignable.
@@ -277,32 +277,32 @@ class User extends Authenticatable
 
 You can trigger a model sync in several ways:
 
-1. **Using the ShouldSyncOnSaveTrait (Automatic Sync on Save):**
-   Add the `ShouldSyncOnSaveTrait` to your Eloquent model to automatically trigger a CRM sync every time the model is saved (created or updated). This is the easiest way to ensure your model stays in sync with your CRM provider without writing custom logic.
+1. **Using the ShouldSyncToCrmOnSave (Automatic Sync on Save):**
+   Add the `ShouldSyncToCrmOnSave` to your Eloquent model to automatically trigger a CRM sync every time the model is saved (created or updated). This is the easiest way to ensure your model stays in sync with your CRM provider without writing custom logic.
 
     ```php
-    use Wazza\SyncModelToCrm\Traits\ShouldSyncOnSaveTrait;
+    use Wazza\SyncModelToCrm\Traits\ShouldSyncToCrmOnSave;
 
     class User extends Authenticatable
     {
-        use ShouldSyncOnSaveTrait;
+        use ShouldSyncToCrmOnSave;
         // ...
     }
     ```
 
     **When to use:**
-    - Use `ShouldSyncOnSaveTrait` if you want your model to always sync to the CRM automatically after every save (create/update), with no extra code required.
+    - Use `ShouldSyncToCrmOnSave` if you want your model to always sync to the CRM automatically after every save (create/update), with no extra code required.
     - This is ideal for most use cases where you want seamless, automatic syncing.
 
-2. **Using the HasCrmSyncTrait (Manual or Custom Sync):**
-   Add the `HasCrmSyncTrait` to your model if you want to control exactly when the sync happens. This trait provides methods like `$this->syncToCrm()`, `$this->syncToCrmCreate()`, `$this->syncToCrmUpdate()`, etc., which you can call from mutators, custom methods, or anywhere in your application.
+2. **Using the HasCrmSync (Manual or Custom Sync):**
+   Add the `HasCrmSync` to your model if you want to control exactly when the sync happens. This trait provides methods like `$this->syncToCrm()`, `$this->syncToCrmCreate()`, `$this->syncToCrmUpdate()`, etc., which you can call from mutators, custom methods, or anywhere in your application.
 
     ```php
-    use Wazza\SyncModelToCrm\Traits\HasCrmSyncTrait;
+    use Wazza\SyncModelToCrm\Traits\HasCrmSync;
 
     class User extends Authenticatable
     {
-        use HasCrmSyncTrait;
+        use HasCrmSync;
         // ...
     }
 
@@ -314,7 +314,7 @@ You can trigger a model sync in several ways:
     ```
 
     **When to use:**
-    - Use `HasCrmSyncTrait` if you want to trigger syncs only at specific times, or if you need to customize the sync logic (e.g., only sync on certain conditions, or from a controller, observer, or job).
+    - Use `HasCrmSync` if you want to trigger syncs only at specific times, or if you need to customize the sync logic (e.g., only sync on certain conditions, or from a controller, observer, or job).
     - This is ideal for advanced use cases or when you want more granular control over syncing.
 
 3. **Directly in a Controller:**

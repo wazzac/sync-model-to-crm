@@ -11,9 +11,9 @@ use Wazza\SyncModelToCrm\Http\Controllers\CrmController;
  * You do NOT need to override the save() method or manually call the sync method.
  * The sync operation is handled automatically via model events by this trait.
  *
- * IMPORTANT: You do not have to include the `HasCrmSyncTrait` in your model if you are using this trait.
+ * IMPORTANT: You do not have to include the `HasCrmSync` in your model if you are using this trait.
  */
-trait ShouldSyncOnSaveTrait
+trait ShouldSyncToCrmOnSave
 {
     /**
      * Boot the trait and add a saved event listener to trigger CRM sync.
