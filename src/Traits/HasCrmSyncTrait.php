@@ -7,18 +7,25 @@ use Wazza\SyncModelToCrm\Http\Controllers\CrmController;
 /**
  * Include the below trait in your model to enable CRM sync functionality
  * manually by $this->syncToCrm() method. You do not have to use this
- * trait if you plan to use observers or want to include the ShouldSyncOnSaveTrait
+ * trait if you plan to use observers or want to include the `ShouldSyncOnSaveTrait`
  * trait that will automatically sync the model to the CRM on save.
  *
+ * IMPORTANT: You do not have to include the `ShouldSyncOnSaveTrait` in your model if you are using this trait.
+ *
+ * Example used in a model:
  * public function save(array $options = [])
  * {
  *     parent::save($options);
- *     // lets call the syncModelToCrm method to sync the model to the CRM.
- *     // refer to the trait for all the available methods
- *     $this->syncToCrmPatch(); -- don't use this method if you are using observers
+ *     $this->syncToCrmPatch();
  * }
+ *
+ * Example used in a controller:
+ * $user = User::find(1);
+ * $user->name = 'New Name';
+ * $user->save(); // if `ShouldSyncOnSaveTrait` is used, this will automatically sync to CRM
+ * $user->syncToCrm(); // on demand sync to CRM (if not using observers)
  */
-trait CrmTrait
+trait HasCrmSyncTrait
 {
     /**
      * Initiate a `Sync Model to CRM` process
@@ -51,6 +58,10 @@ trait CrmTrait
         $crmSync->execute($associations, $environment, $provider);
     }
 
+    // --------------------------------------------
+    // --- individual methods for each action -----
+    // --------------------------------------------
+
     /**
      * Sync the model to the CRM on create
      *
@@ -64,7 +75,12 @@ trait CrmTrait
         string|array|null $environment = null,
         string|array|null $provider = null
     ): void {
-        $this->syncToCrm(CrmController::EXEC_ACTION_CREATE, $associations, $environment, $provider);
+        $this->syncToCrm(
+            CrmController::EXEC_ACTION_CREATE,
+            $associations,
+            $environment,
+            $provider
+        );
     }
 
     /**
@@ -80,7 +96,12 @@ trait CrmTrait
         string|array|null $environment = null,
         string|array|null $provider = null
     ): void {
-        $this->syncToCrm(CrmController::EXEC_ACTION_UPDATE, $associations, $environment, $provider);
+        $this->syncToCrm(
+            CrmController::EXEC_ACTION_UPDATE,
+            $associations,
+            $environment,
+            $provider
+        );
     }
 
     /**
@@ -96,7 +117,12 @@ trait CrmTrait
         string|array|null $environment = null,
         string|array|null $provider = null
     ): void {
-        $this->syncToCrm(CrmController::EXEC_ACTION_DELETE, $associations, $environment, $provider);
+        $this->syncToCrm(
+            CrmController::EXEC_ACTION_DELETE,
+            $associations,
+            $environment,
+            $provider
+        );
     }
 
     /**
@@ -112,7 +138,12 @@ trait CrmTrait
         string|array|null $environment = null,
         string|array|null $provider = null
     ): void {
-        $this->syncToCrm(CrmController::EXEC_ACTION_RESTORE, $associations, $environment, $provider);
+        $this->syncToCrm(
+            CrmController::EXEC_ACTION_RESTORE,
+            $associations,
+            $environment,
+            $provider
+        );
     }
 
     /**
@@ -129,7 +160,10 @@ trait CrmTrait
         string|array|null $provider = null
     ): void {
         $this->syncToCrm(
-            [CrmController::EXEC_ACTION_CREATE, CrmController::EXEC_ACTION_UPDATE],
+            [
+                CrmController::EXEC_ACTION_CREATE,
+                CrmController::EXEC_ACTION_UPDATE
+            ],
             $associations,
             $environment,
             $provider

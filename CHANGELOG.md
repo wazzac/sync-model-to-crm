@@ -1,6 +1,16 @@
 # Release Notes
 
-## v1.2.0 `unsure...`
+## v1.2.0 `2025-06-17`
+
+### Added
+
+- Introduced `ShouldSyncOnSaveTrait` to automatically initiate CRM sync after model save.
+
+### Changed
+
+- Renamed `CrmTrait` for clarity.
+- Enhanced inline documentation in both trait files to better explain their use cases.
+- Updated code to use the singleton instance for CRM sync instead of creating new instances.
 
 ## v1.1.0 `2025-06-04`
 
@@ -9,7 +19,7 @@
 Our first stable release. The package has been in beta for a few months without any major issues. We will keep on improving the codebase and continue to add more sync functionality.
 
 - Added the ability for the `smtc_external_key_lookup` mapping table to support both `uuid` and `int` foreign keys.
-- Fixed a bug in the `CrmTrait` file where the Model instance was not given but the Model name (string).
+- Fixed a bug in the `HasCrmSyncTrait` file where the Model instance was not given but the Model name (string).
 - Fixed PHP class types.
 - Documentation updates.
 

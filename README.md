@@ -77,7 +77,7 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\Entity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController;
-use Wazza\SyncModelToCrm\Traits\CrmTrait;
+use Wazza\SyncModelToCrm\Traits\HasCrmSyncTrait;
 
 class User extends Authenticatable
 {
@@ -85,7 +85,7 @@ class User extends Authenticatable
 
     // include this if you wish to use the `Mutators function` or
     // $this->syncToCrm() directly as appose to the observer method
-    use CrmTrait;
+    use HasCrmSyncTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -282,11 +282,10 @@ You can trigger a model sync in several ways:
 
     ```php
     use Wazza\SyncModelToCrm\Traits\ShouldSyncOnSaveTrait;
-    use Wazza\SyncModelToCrm\Traits\CrmTrait;
 
     class User extends Authenticatable
     {
-        use ShouldSyncOnSaveTrait, CrmTrait;
+        use ShouldSyncOnSaveTrait;
         // ...
     }
     ```
@@ -295,15 +294,15 @@ You can trigger a model sync in several ways:
     - Use `ShouldSyncOnSaveTrait` if you want your model to always sync to the CRM automatically after every save (create/update), with no extra code required.
     - This is ideal for most use cases where you want seamless, automatic syncing.
 
-2. **Using the CrmTrait (Manual or Custom Sync):**
-   Add the `CrmTrait` to your model if you want to control exactly when the sync happens. This trait provides methods like `$this->syncToCrm()`, `$this->syncToCrmCreate()`, `$this->syncToCrmUpdate()`, etc., which you can call from mutators, custom methods, or anywhere in your application.
+2. **Using the HasCrmSyncTrait (Manual or Custom Sync):**
+   Add the `HasCrmSyncTrait` to your model if you want to control exactly when the sync happens. This trait provides methods like `$this->syncToCrm()`, `$this->syncToCrmCreate()`, `$this->syncToCrmUpdate()`, etc., which you can call from mutators, custom methods, or anywhere in your application.
 
     ```php
-    use Wazza\SyncModelToCrm\Traits\CrmTrait;
+    use Wazza\SyncModelToCrm\Traits\HasCrmSyncTrait;
 
     class User extends Authenticatable
     {
-        use CrmTrait;
+        use HasCrmSyncTrait;
         // ...
     }
 
@@ -315,17 +314,30 @@ You can trigger a model sync in several ways:
     ```
 
     **When to use:**
-    - Use `CrmTrait` if you want to trigger syncs only at specific times, or if you need to customize the sync logic (e.g., only sync on certain conditions, or from a controller, observer, or job).
+    - Use `HasCrmSyncTrait` if you want to trigger syncs only at specific times, or if you need to customize the sync logic (e.g., only sync on certain conditions, or from a controller, observer, or job).
     - This is ideal for advanced use cases or when you want more granular control over syncing.
 
 3. **Directly in a Controller:**
 
     ```php
-    (new CrmController())->setModel($user)->execute();
+    // If CrmController is registered as a singleton in the service container,
+    // you should resolve it via dependency injection or the app() helper
+    // to ensure you get the singleton instance:
+    app(CrmController::class)->setModel($user)->execute();
+
+    // Or, if you're inside a controller or method with dependency injection:
+    public function syncUser(CrmController $crmController, User $user)
+    {
+        $crmController->setModel($user)->execute();
+    }
     ```
 
+    **Note:**
+    Instantiating with `new CrmController()` will always create a new instance, bypassing the singleton.
+    To use the singleton, always resolve it from the container.
+
 4. **Via an Observer:**
-   Register an observer to automatically sync after save, update, delete, or restore events. (See example in the next section.)
+   Register an observer to automatically sync after save, update, delete, or restore events.
 
 5. **In a Job:**
    Offload sync logic to a queued job for asynchronous processing.
@@ -383,7 +395,8 @@ You can trigger a model sync in several ways:
     ```
 
 6. **Review Configuration:**
-   Adjust the published config file as needed.
+   Adjust the published config file as needed. You also so not need all of the env settings above, have a look at the config file
+   and overwrite any applicable items. Happy coding 😉
 
 ---
 
@@ -400,7 +413,7 @@ tail -f storage/logs/laravel.log | grep sync-modeltocrm
 
 ## Testing
 
-Run the test suite with:
+We have included a few unit tests, please expand if you wish to fork and and help expand the functionalities.
 
 ```bash
 ./vendor/bin/pest
