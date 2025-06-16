@@ -42,25 +42,6 @@ class SyncModelToCrmServiceProvider extends BaseServiceProvider
         $this->app->singleton(CrmSyncController::class, function () {
             return new CrmSyncController();
         });
-
-        /*
-        You can use the above registered singleton service in your application like this:
-        $crmController = app(CrmSyncController::class);
-        $crmController->someMethod();
-
-        You can also use dependency injection in your controllers or other services.
-        For example:
-        public function __construct(CrmSyncController $crmController)
-        {
-            $this->crmController = $crmController;
-        }
-
-        This allows you to access the methods of CrmSyncController within your class.
-        You can also register other services or bindings as needed.
-        $this->app->bind('some.service', function ($app) {
-            return new SomeService();
-        });
-        */
     }
 
     /**
