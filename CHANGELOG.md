@@ -1,5 +1,21 @@
 # Release Notes
 
+## v1.2.0 `2025-06-17`
+
+### Added
+
+- Introduced `ShouldSyncToCrmOnSave` to automatically initiate CRM sync after model save.
+
+### Changed
+
+- Renamed `CrmTrait` to `HasCrmSync` in `namespace Wazza\SyncModelToCrm\Traits;`.
+- Renamed `CrmController` to `CrmSyncController` in `namespace Wazza\SyncModelToCrm\Http\Controllers;`.
+- Enhanced inline documentation in both trait files to better explain their use cases.
+- Updated code to use the singleton instance for CRM sync instead of creating new instances. e.g. `app(CrmSyncController::class)` instead of `new CrmSyncController()`
+
+### Important changes from v1.1.0
+- Bulk update `CrmTrait` to `HasCrmSync` for all `Wazza\SyncModelToCrm\Traits\HasCrmSync` used files.
+
 ## v1.1.0 `2025-06-04`
 
 ### Stable Release 🚀
@@ -7,7 +23,7 @@
 Our first stable release. The package has been in beta for a few months without any major issues. We will keep on improving the codebase and continue to add more sync functionality.
 
 - Added the ability for the `smtc_external_key_lookup` mapping table to support both `uuid` and `int` foreign keys.
-- Fixed a bug in the `crmTrait` file where the Model instance was not given but the Model name (string).
+- Fixed a bug in the `HasCrmSync` file where the Model instance was not given but the Model name (string).
 - Fixed PHP class types.
 - Documentation updates.
 

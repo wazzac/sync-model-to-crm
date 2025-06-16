@@ -13,15 +13,15 @@ use Psr\Container\ContainerExceptionInterface;
 use Exception;
 
 /**
- * Sync Class CrmController
- * Example: (new CrmController())->setModel($user)->execute();
+ * Sync Class CrmSyncController
+ * Example: app(CrmSyncController::class)->setModel($user)->execute();
  *
  * @package Wazza\SyncModelToCrm\Http\Controllers
  * @version 1.0.0
  * @todo convert the log class to be injected into the controller instead of using the facade
  */
 
-class CrmController extends BaseController
+class CrmSyncController extends BaseController
 {
     // single execute() actions
     public const EXEC_ACTION_CREATE = 'create';
@@ -117,7 +117,7 @@ class CrmController extends BaseController
     private $associateRules = [];
 
     /**
-     * Create a new CrmController instance and define the log identifier (blank will create a new one)
+     * Create a new CrmSyncController instance and define the log identifier (blank will create a new one)
      *
      * @param string|null $logIdentifier
      * @param array|string|null $actions - null/default to patch (insert or update)
@@ -134,6 +134,25 @@ class CrmController extends BaseController
         // set all actions to false
         $this->setAttemptAll(false);
 
+        // make sure actions is an array
+        $this->setActions($actions);
+
+        // anything else to do here?
+        // ...
+    }
+
+    // --------------------------------------------------------------
+    // -- setters ---------------------------------------------------
+    // --------------------------------------------------------------
+
+    /**
+     * Set the actions to be executed
+     *
+     * @param array|string|null $actions - default to config value
+     * @return $this
+     */
+    public function setActions(array|string|null $actions = null): self
+    {
         // make sure actions is an array
         if (empty($actions)) {
             $actions = [self::EXEC_ACTION_CREATE, self::EXEC_ACTION_UPDATE];
@@ -164,14 +183,8 @@ class CrmController extends BaseController
                     break;
             }
         }
-
-        // anything else to do here?
-        // ...
+        return $this;
     }
-
-    // --------------------------------------------------------------
-    // -- setters ---------------------------------------------------
-    // --------------------------------------------------------------
 
     /**
      * Set the environment for the CRM provider
@@ -344,6 +357,21 @@ class CrmController extends BaseController
     // --------------------------------------------------------------
     // -- getters ---------------------------------------------------
     // --------------------------------------------------------------
+
+    /**
+     * Get the actions to be executed
+     *
+     * @return array
+     */
+    public function getAction(): array
+    {
+        return [
+            'create' => $this->shouldCreate(),
+            'update' => $this->shouldUpdate(),
+            'delete' => $this->shouldDelete(),
+            'restore' => $this->shouldRestore(),
+        ];
+    }
 
     /**
      * Get the environment for the CRM provider

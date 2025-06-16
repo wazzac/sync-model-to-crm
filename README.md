@@ -77,7 +77,7 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\Entity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Wazza\SyncModelToCrm\Http\Controllers\CrmProviders\HubSpotController;
-use Wazza\SyncModelToCrm\Traits\crmTrait;
+use Wazza\SyncModelToCrm\Traits\HasCrmSync;
 
 class User extends Authenticatable
 {
@@ -85,7 +85,7 @@ class User extends Authenticatable
 
     // include this if you wish to use the `Mutators function` or
     // $this->syncToCrm() directly as appose to the observer method
-    use crmTrait;
+    use HasCrmSync;
 
     /**
      * The attributes that are mass assignable.
@@ -277,115 +277,69 @@ class User extends Authenticatable
 
 You can trigger a model sync in several ways:
 
-1. **Directly in a Controller:**
+1. **Using the ShouldSyncToCrmOnSave (Automatic Sync on Save):**
+   Add the `ShouldSyncToCrmOnSave` to your Eloquent model to automatically trigger a CRM sync every time the model is saved (created or updated). This is the easiest way to ensure your model stays in sync with your CRM provider without writing custom logic.
 
     ```php
-    (new CrmController())->setModel($user)->execute();
+    use Wazza\SyncModelToCrm\Traits\ShouldSyncToCrmOnSave;
+
+    class User extends Authenticatable
+    {
+        use ShouldSyncToCrmOnSave;
+        // ...
+    }
     ```
 
-2. **Using the Trait in a Mutator:**
-   Call `$this->syncToCrm()` within your model.
+    **When to use:**
+    - Use `ShouldSyncToCrmOnSave` if you want your model to always sync to the CRM automatically after every save (create/update), with no extra code required.
+    - This is ideal for most use cases where you want seamless, automatic syncing.
 
-3. **Via an Observer:**
+2. **Using the HasCrmSync (Manual or Custom Sync):**
+   Add the `HasCrmSync` to your model if you want to control exactly when the sync happens. This trait provides methods like `$this->syncToCrm()`, `$this->syncToCrmCreate()`, `$this->syncToCrmUpdate()`, etc., which you can call from mutators, custom methods, or anywhere in your application.
+
+    ```php
+    use Wazza\SyncModelToCrm\Traits\HasCrmSync;
+
+    class User extends Authenticatable
+    {
+        use HasCrmSync;
+        // ...
+    }
+
+    public function save(array $options = [])
+    {
+        parent::save($options);
+        $this->syncToCrmPatch(); // Manually trigger sync after save
+    }
+    ```
+
+    **When to use:**
+    - Use `HasCrmSync` if you want to trigger syncs only at specific times, or if you need to customize the sync logic (e.g., only sync on certain conditions, or from a controller, observer, or job).
+    - This is ideal for advanced use cases or when you want more granular control over syncing.
+
+3. **Directly in a Controller:**
+
+    ```php
+    // If CrmSyncController is registered as a singleton in the service container,
+    // you should resolve it via dependency injection or the app() helper
+    // to ensure you get the singleton instance:
+    app(CrmSyncController::class)->setModel($user)->execute();
+
+    // Or, if you're inside a controller or method with dependency injection:
+    public function syncUser(CrmSyncController $crmController, User $user)
+    {
+        $crmController->setModel($user)->execute();
+    }
+    ```
+
+    **Note:**
+    Instantiating with `new CrmSyncController()` will always create a new instance, bypassing the singleton.
+    To use the singleton, always resolve it from the container.
+
+4. **Via an Observer:**
    Register an observer to automatically sync after save, update, delete, or restore events.
 
-    ```php
-    namespace App\Observers;
-
-    use App\Models\User;
-    use Wazza\SyncModelToCrm\Http\Controllers\CrmController;
-    use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
-
-    class UserObserver implements ShouldHandleEventsAfterCommit
-    {
-        /**
-         * Handle the User "created" event.
-         */
-        public function created(User $user): void
-        {
-            echo ('create...');
-            (new CrmController())
-                ->setModel($user)
-                ->setAttemptCreate()
-                ->execute(true);
-            echo ('created...');
-        }
-
-        /**
-         * Handle the User "updated" event.
-         */
-        public function updated(User $user): void
-        {
-            echo ('update...');
-            (new CrmController())
-                ->setModel($user)
-                ->setAttemptUpdate()
-                ->execute(true);
-            echo ('updated...');
-        }
-
-        /**
-         * Handle the User "deleted" event.
-         * Run when a user is soft-deleted.
-         */
-        public function deleted(User $user)
-        {
-            echo ('delete...');
-            (new CrmController())
-                ->setModel($user)
-                ->setAttemptDelete()
-                ->execute();
-            echo ('deleted...');
-        }
-
-        /**
-         * Handle the User "restored" event.
-         * Soft-delete has been reversed.
-         */
-        public function restored(User $user): void
-        {
-            echo ('restore...');
-            (new CrmController())
-                ->setModel($user)
-                ->setAttemptRestore()
-                ->execute();
-            echo ('restored...');
-        }
-
-        /**
-         * Handle the User "force deleted" event.
-         */
-        public function forceDeleted(User $user): void
-        {
-            echo ('forceDeleted...');
-        }
-
-        /**
-         * Handle the User "saved" event.
-         *
-         */
-        public function saved(User $user): void
-        {
-            // echo ('saving...');
-            // (new CrmController())
-            //     ->setModel($user)
-            //     ->setAttemptAll() // open for anything...
-            //     ->execute(true);
-            // echo ('saved...');
-        }
-    }
-    ```
-
-    Register the observer in your `AppServiceProvider`:
-
-    ```php
-    public function boot(): void
-    {
-        \App\Models\User::observe(\App\Observers\UserObserver::class);
-    }
-    ```
-
-4. **In a Job:**
+5. **In a Job:**
    Offload sync logic to a queued job for asynchronous processing.
 
 ---
@@ -441,7 +395,8 @@ You can trigger a model sync in several ways:
     ```
 
 6. **Review Configuration:**
-   Adjust the published config file as needed.
+   Adjust the published config file as needed. You also do not need all of the env settings above, have a look at the config file
+   and overwrite any applicable items. Happy coding 😉
 
 ---
 
@@ -458,7 +413,7 @@ tail -f storage/logs/laravel.log | grep sync-modeltocrm
 
 ## Testing
 
-Run the test suite with:
+We have included a few unit tests, please expand if you wish to fork and help expand the functionalities.
 
 ```bash
 ./vendor/bin/pest
