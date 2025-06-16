@@ -8,9 +8,13 @@
 
 ### Changed
 
-- Renamed `CrmTrait` for clarity.
+- Renamed `CrmTrait` to `HasCrmSync` in `namespace Wazza\SyncModelToCrm\Traits;`.
+- Renamed `CrmController` to `CrmSyncController` in `namespace Wazza\SyncModelToCrm\Http\Controllers;`.
 - Enhanced inline documentation in both trait files to better explain their use cases.
-- Updated code to use the singleton instance for CRM sync instead of creating new instances.
+- Updated code to use the singleton instance for CRM sync instead of creating new instances. e.g. `app(CrmSyncController::class)` instead of `new CrmSyncController()`
+
+### Important changes from v1.1.0
+- Bulk update `CrmTrait` to `HasCrmSync` for all `Wazza\SyncModelToCrm\Traits\HasCrmSync` used files.
 
 ## v1.1.0 `2025-06-04`
 
