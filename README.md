@@ -395,7 +395,7 @@ You can trigger a model sync in several ways:
     ```
 
 6. **Review Configuration:**
-   Adjust the published config file as needed. You also so not need all of the env settings above, have a look at the config file
+   Adjust the published config file as needed. You also do not need all of the env settings above, have a look at the config file
    and overwrite any applicable items. Happy coding 😉
 
 ---
