@@ -3,7 +3,7 @@
 namespace Wazza\SyncModelToCrm\Providers;
 
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-use Wazza\SyncModelToCrm\Http\Controllers\CrmController;
+use Wazza\SyncModelToCrm\Http\Controllers\CrmSyncController;
 
 class SyncModelToCrmServiceProvider extends BaseServiceProvider
 {
@@ -39,23 +39,23 @@ class SyncModelToCrmServiceProvider extends BaseServiceProvider
         );
 
         // Register the singleton service the package provides.
-        $this->app->singleton(CrmController::class, function () {
-            return new CrmController();
+        $this->app->singleton(CrmSyncController::class, function () {
+            return new CrmSyncController();
         });
 
         /*
         You can use the above registered singleton service in your application like this:
-        $crmController = app(CrmController::class);
+        $crmController = app(CrmSyncController::class);
         $crmController->someMethod();
 
         You can also use dependency injection in your controllers or other services.
         For example:
-        public function __construct(CrmController $crmController)
+        public function __construct(CrmSyncController $crmController)
         {
             $this->crmController = $crmController;
         }
 
-        This allows you to access the methods of CrmController within your class.
+        This allows you to access the methods of CrmSyncController within your class.
         You can also register other services or bindings as needed.
         $this->app->bind('some.service', function ($app) {
             return new SomeService();

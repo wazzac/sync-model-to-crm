@@ -2,7 +2,7 @@
 
 namespace Wazza\SyncModelToCrm\Traits;
 
-use Wazza\SyncModelToCrm\Http\Controllers\CrmController;
+use Wazza\SyncModelToCrm\Http\Controllers\CrmSyncController;
 
 /**
  * Include the below trait in your model to enable CRM sync functionality
@@ -52,7 +52,7 @@ trait HasCrmSync
         }
 
         // initiate a crm sync process
-        $crmSync = app(CrmController::class);
+        $crmSync = app(CrmSyncController::class);
         $crmSync->setActions($actions);
         $crmSync->setModel($model);
         $crmSync->execute($associations, $environment, $provider);
@@ -76,7 +76,7 @@ trait HasCrmSync
         string|array|null $provider = null
     ): void {
         $this->syncToCrm(
-            CrmController::EXEC_ACTION_CREATE,
+            CrmSyncController::EXEC_ACTION_CREATE,
             $associations,
             $environment,
             $provider
@@ -97,7 +97,7 @@ trait HasCrmSync
         string|array|null $provider = null
     ): void {
         $this->syncToCrm(
-            CrmController::EXEC_ACTION_UPDATE,
+            CrmSyncController::EXEC_ACTION_UPDATE,
             $associations,
             $environment,
             $provider
@@ -118,7 +118,7 @@ trait HasCrmSync
         string|array|null $provider = null
     ): void {
         $this->syncToCrm(
-            CrmController::EXEC_ACTION_DELETE,
+            CrmSyncController::EXEC_ACTION_DELETE,
             $associations,
             $environment,
             $provider
@@ -139,7 +139,7 @@ trait HasCrmSync
         string|array|null $provider = null
     ): void {
         $this->syncToCrm(
-            CrmController::EXEC_ACTION_RESTORE,
+            CrmSyncController::EXEC_ACTION_RESTORE,
             $associations,
             $environment,
             $provider
@@ -161,8 +161,8 @@ trait HasCrmSync
     ): void {
         $this->syncToCrm(
             [
-                CrmController::EXEC_ACTION_CREATE,
-                CrmController::EXEC_ACTION_UPDATE
+                CrmSyncController::EXEC_ACTION_CREATE,
+                CrmSyncController::EXEC_ACTION_UPDATE
             ],
             $associations,
             $environment,

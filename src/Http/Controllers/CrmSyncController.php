@@ -13,15 +13,15 @@ use Psr\Container\ContainerExceptionInterface;
 use Exception;
 
 /**
- * Sync Class CrmController
- * Example: app(CrmController::class)->setModel($user)->execute();
+ * Sync Class CrmSyncController
+ * Example: app(CrmSyncController::class)->setModel($user)->execute();
  *
  * @package Wazza\SyncModelToCrm\Http\Controllers
  * @version 1.0.0
  * @todo convert the log class to be injected into the controller instead of using the facade
  */
 
-class CrmController extends BaseController
+class CrmSyncController extends BaseController
 {
     // single execute() actions
     public const EXEC_ACTION_CREATE = 'create';
@@ -117,7 +117,7 @@ class CrmController extends BaseController
     private $associateRules = [];
 
     /**
-     * Create a new CrmController instance and define the log identifier (blank will create a new one)
+     * Create a new CrmSyncController instance and define the log identifier (blank will create a new one)
      *
      * @param string|null $logIdentifier
      * @param array|string|null $actions - null/default to patch (insert or update)

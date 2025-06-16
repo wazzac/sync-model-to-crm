@@ -5,7 +5,7 @@ namespace Wazza\SyncModelToCrm\Http\Contracts;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Interface for the CrmController class.
+ * Interface for the CrmSyncController class.
  * All CRM controllers must implement this interface.
  *
  * List of required properties:

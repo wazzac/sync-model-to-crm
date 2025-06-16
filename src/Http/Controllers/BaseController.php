@@ -20,7 +20,7 @@ class BaseController extends Controller
     public $logger;
 
     /**
-     * Create a new CrmController instance.
+     * Create a new CrmSyncController instance.
      *
      * @param string|null $logIdentifier
      * @throws BindingResolutionException

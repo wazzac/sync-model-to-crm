@@ -2,7 +2,7 @@
 
 namespace Wazza\SyncModelToCrm\Traits;
 
-use Wazza\SyncModelToCrm\Http\Controllers\CrmController;
+use Wazza\SyncModelToCrm\Http\Controllers\CrmSyncController;
 
 /**
  * Include this trait in your model to enable automatic CRM synchronization on save.
@@ -21,7 +21,7 @@ trait ShouldSyncToCrmOnSave
     public static function bootShouldSyncOnSaveTrait()
     {
         static::saved(function ($model) {
-            $crmSync = app(CrmController::class);
+            $crmSync = app(CrmSyncController::class);
             $crmSync->setModel($model);
             $crmSync->execute();
         });

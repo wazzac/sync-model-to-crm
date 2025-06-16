@@ -320,20 +320,20 @@ You can trigger a model sync in several ways:
 3. **Directly in a Controller:**
 
     ```php
-    // If CrmController is registered as a singleton in the service container,
+    // If CrmSyncController is registered as a singleton in the service container,
     // you should resolve it via dependency injection or the app() helper
     // to ensure you get the singleton instance:
-    app(CrmController::class)->setModel($user)->execute();
+    app(CrmSyncController::class)->setModel($user)->execute();
 
     // Or, if you're inside a controller or method with dependency injection:
-    public function syncUser(CrmController $crmController, User $user)
+    public function syncUser(CrmSyncController $crmController, User $user)
     {
         $crmController->setModel($user)->execute();
     }
     ```
 
     **Note:**
-    Instantiating with `new CrmController()` will always create a new instance, bypassing the singleton.
+    Instantiating with `new CrmSyncController()` will always create a new instance, bypassing the singleton.
     To use the singleton, always resolve it from the container.
 
 4. **Via an Observer:**
