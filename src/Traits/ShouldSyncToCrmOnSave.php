@@ -18,7 +18,7 @@ trait ShouldSyncToCrmOnSave
     /**
      * Boot the trait and add a saved event listener to trigger CRM sync.
      */
-    public static function bootShouldSyncOnSaveTrait()
+    public static function bootShouldSyncToCrmOnSave()
     {
         static::saved(function ($model) {
             $crmSync = app(CrmSyncController::class);
