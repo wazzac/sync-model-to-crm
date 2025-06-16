@@ -413,7 +413,7 @@ tail -f storage/logs/laravel.log | grep sync-modeltocrm
 
 ## Testing
 
-We have included a few unit tests, please expand if you wish to fork and and help expand the functionalities.
+We have included a few unit tests, please expand if you wish to fork and help expand the functionalities.
 
 ```bash
 ./vendor/bin/pest
