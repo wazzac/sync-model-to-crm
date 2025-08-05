@@ -2,6 +2,7 @@
     <a href="https://github.com/wazzac/sync-model-to-crm/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/wazzac/sync-model-to-crm"></a>
     <a href="https://github.com/wazzac/sync-model-to-crm/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/wazzac/sync-model-to-crm"></a>
     <a href="https://github.com/wazzac/sync-model-to-crm/blob/main/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/wazzac/sync-model-to-crm"></a>
+    <a href="https://github.com/wazzac/sync-model-to-crm"><img alt="GitHub version" src="https://img.shields.io/github/v/tag/wazzac/sync-model-to-crm?label=version&sort=semver"></a>
 </p>
 
 # Sync Model to CRM
